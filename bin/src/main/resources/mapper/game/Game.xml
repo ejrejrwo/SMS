@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- <mapper namespace="com.mde.app.common.dao"> -->
+<mapper namespace="Game">
+
+	<!-- 경기신청 리스트를 받아온다 검색, 페이징, 정렬 -->
+	<select id="getGamelist" parameterType="com.boot.finalpro.game.model.GameParam" resultType="com.boot.finalpro.game.model.GameDTO">
+		SELECT B.SEQ_GAME, B.CATEGORY, B.NAME_TEAM1, B.GDATE, B.NAME_STADIUM, B.TITLE, B.CONTENT, B.DEL, B.READ_COUNT, B.WDATE 
+		FROM (SELECT ROWNUM AS RNUM, A.SEQ_GAME, A.CATEGORY, A.NAME_TEAM1, A.GDATE, A.NAME_STADIUM, A.TITLE, A.CONTENT, A.DEL, A.READ_COUNT, A.WDATE
+			  FROM (SELECT SEQ_GAME, CATEGORY, NAME_TEAM1, GDATE, NAME_STADIUM, TITLE, CONTENT, DEL, READ_COUNT, WDATE 
+			  		FROM GAME	
+		  			WHERE DEL=0
+		  			AND (NAME_TEAM2 IS NULL) AND (LEAGUE IS NULL)
+		  			AND (TRUNC(SYSDATE, 'MI')-TO_DATE(CONCAT(SUBSTR(GDATE, 0, 11), SUBSTR(GDATE, 14, 18)),'YYYY-MM-DD HH24:MI')) <![CDATA[ < ]]> 0
+			  			<if test="choice != null and choice != ''
+			  				and keyword != null and keyword != ''">	
+			  				<if test="choice == 'category'">
+			  					AND CATEGORY LIKE '%'||#{keyword}||'%'
+			  				</if>	
+			  				<if test="choice == 'name_stadium'">
+			  					AND NAME_STADIUM LIKE '%'||#{keyword}||'%'
+			  				</if>		  				
+			  				<if test="choice == 'name_team1'">
+			  					AND NAME_TEAM1 LIKE '%'||#{keyword}||'%'
+			  				</if>		
+			  				<if test="choice == 'title'">
+			  					AND TITLE LIKE '%'||#{keyword}||'%'
+			  				</if>	  				
+			  			</if>
+			  		<if test="sorting == 0">
+						ORDER BY WDATE DESC)A
+					</if>	
+			  		<if test="sorting == 1">
+						ORDER BY GDATE)A 
+					</if>	
+			  	 WHERE ROWNUM <![CDATA[<=]]>#{endNum} )B		  
+		WHERE B.RNUM <![CDATA[>=]]>#{startNum}		  				  									
+	</select>
+	
+	<!-- 전체 글 수를 구한다 -->
+	<select id="getGameCount" parameterType="com.boot.finalpro.game.model.GameParam" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0) AS CNT
+		FROM GAME
+		WHERE DEL=0
+			AND (NAME_TEAM2 IS NULL) AND (LEAGUE IS NULL)
+			AND (TRUNC(SYSDATE, 'MI')-TO_DATE(CONCAT(SUBSTR(GDATE, 0, 11), SUBSTR(GDATE, 14, 18)),'YYYY-MM-DD HH24:MI')) <![CDATA[ < ]]> 0
+		<if test="choice != null and choice != ''
+			and keyword != null and keyword != ''">
+			<if test="choice == 'category'">
+				AND CATEGORY LIKE '%'||#{keyword}||'%'
+			</if>
+			<if test="choice == 'name_team1'">
+				AND NAME_TEAM1 LIKE '%'||#{keyword}||'%'
+			</if>		
+			<if test="choice == 'title'">
+				AND TITLE LIKE '%'||#{keyword}||'%'
+			</if>	  				
+	  	</if>	  	
+	</select>
+	
+	<!-- 로그인한 사람 정보를 가져온다 -->
+	<select id="getMember" parameterType="java.lang.String" resultType="com.boot.finalpro.member.model.MemberDTO">
+		SELECT * FROM MEMBER
+		WHERE ID=#{id}
+	</select>
+	
+	<!-- 로그인한 사람 권한을 가져온다 -->
+	<select id="getAuth" parameterType="java.lang.String" resultType="com.boot.finalpro.member.model.AuthoritiesDTO">
+		SELECT * FROM AUTHORITIES
+		WHERE ID=#{id}
+	</select>
+		
+	<!-- 경기장 가격을 가져온다 -->
+	<select id="getprice" parameterType="com.boot.finalpro.game.model.StadiumDTO" resultType="java.lang.Integer">
+		SELECT PRICE FROM STADIUM
+		WHERE NAME_STADIUM=#{name_stadium}
+	</select>
+	
+    <!-- 게임신청 내용을 입력한다 -->
+    <insert id="writeGame" parameterType="com.boot.finalpro.game.model.GameDTO">
+    	INSERT INTO GAME
+    	VALUES(GAME_SEQ.NEXTVAL, #{category}, #{name_team1}, null, #{gdate}, #{name_stadium}, #{title}, #{content}
+    		, 0, 0, 0, 0, 0, null, null, 0, SYSDATE)
+    </insert>
+    
+    <!-- 경기장 예약을 입력 -->
+    <insert id="bookGame" parameterType="com.boot.finalpro.game.model.BookingDTO">
+    	INSERT INTO BOOKING
+    	VALUES(BOOKING_SEQ.NEXTVAL, (SELECT NVL(MAX(SEQ_GAME), 0) FROM GAME), #{id}, #{bdate}, #{price}, #{point}, #{name_stadium}, #{book_time}, SYSDATE)
+    </insert>
+    
+    <!-- 경기장 예약시 포인트,머니삭감 -->
+    <update id="payMoney" parameterType="com.boot.finalpro.member.model.MemberDTO">
+    	UPDATE MEMBER
+    	SET NOW_MONEY=#{now_money}, NOW_POINT=#{now_point}
+    	WHERE ID=#{id}
+    </update>
+
+   <!--  게임취소 시 포인트,머니 환불용 -->
+    <select id="backMoney" parameterType="java.lang.Integer" resultType="com.boot.finalpro.game.model.BookingDTO">
+    	SELECT DISTINCT PRICE, POINT 
+    	FROM BOOKING
+		WHERE SEQ_GAME=#{seq_game}
+    </select>
+    
+    <update id="refund" parameterType="com.boot.finalpro.member.model.MemberDTO">
+    	UPDATE MEMBER
+    	SET NOW_MONEY=NOW_MONEY+#{now_money}, NOW_POINT=NOW_POINT+#{now_point}
+    	WHERE ID=#{id}
+    </update> 
+    
+    
+    <!-- 선택한 날짜와 경기장의 예약시간 가져오기 -->
+    <select id="getTime" parameterType="com.boot.finalpro.game.model.BookingDTO" resultType="java.lang.Integer">
+    	SELECT BOOK_TIME
+		FROM (	SELECT COUNT(BOOK_TIME) AS CNT, BOOK_TIME
+				FROM BOOKING
+				WHERE NAME_STADIUM=#{name_stadium} AND BDATE=#{bdate}
+				GROUP BY BOOK_TIME
+				)A
+		<if test="category=='탁구장' or category=='배드민턴장'">		
+		WHERE A.CNT <![CDATA[>=]]> 5
+    	</if>   
+    </select>
+    
+    <!-- gameMatch신청 저장 -->
+	<insert id="reqGame" parameterType="com.boot.finalpro.game.model.GameMatchDTO">
+		INSERT INTO GAME_MATCH
+		VALUES(GAME_MATCH_SEQ.NEXTVAL, #{seq_game}, #{id}, #{name_team2}, #{message}, SYSDATE)
+	</insert>
+		
+	<!-- 수정view에 Game정보 보내기 -->
+	<select id="updateGame" parameterType="java.lang.Integer" resultType="com.boot.finalpro.game.model.GameDTO">
+		SELECT * FROM GAME
+		WHERE SEQ_GAME=#{seq_game}
+	</select>
+    
+    <!-- 수정view에 Booking정보 보내기 -->
+    <select id="updateBooking" parameterType="java.lang.Integer" resultType="com.boot.finalpro.game.model.BookingDTO">
+    	SELECT SEQ_BOOK, SEQ_GAME, ID, BDATE, PRICE, NAME_STADIUM, BOOK_TIME
+    	FROM BOOKING
+    	WHERE SEQ_GAME=#{seq_game}
+    </select>
+    
+    <!-- 게임신청 삭제 -->
+    <update id="deleteGame" parameterType="java.lang.Integer">
+    	UPDATE GAME
+    	SET DEL=1
+    	WHERE SEQ_GAME=#{seq_game}
+    </update>
+    
+    <!-- 예약정보 삭제 -->
+    <delete id="deleteBooking" parameterType="java.lang.Integer">
+    	DELETE BOOKING
+    	WHERE SEQ_GAME=#{seq_game}
+    </delete>
+    
+    <!-- readcount -->
+    <update id="readCount" parameterType="java.lang.Integer">
+    	UPDATE GAME
+    	SET READ_COUNT = READ_COUNT + 1
+    	WHERE SEQ_GAME=#{seq_game}
+    </update>
+    
+    <!-- getReadcount -->
+    <select id="getReadcount" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+    	SELECT READ_COUNT
+    	FROM GAME
+    	WHERE SEQ_GAME=#{seq_game}
+    </select>
+    
+    <!-- 경기 신청을 했는지 여부 -->
+    <select id="subGame" parameterType="java.lang.Integer" resultType="com.boot.finalpro.game.model.GameMatchDTO">
+    	SELECT * FROM GAME_MATCH
+    	WHERE SEQ_GAME=#{seq_game}
+    </select>
+    
+    <!-- 경기장 정보를 가져온다 -->
+    <select id="getStadium" parameterType="com.boot.finalpro.game.model.GameBean" resultType="com.boot.finalpro.game.model.StadiumDTO">
+    	SELECT * FROM STADIUM
+    	WHERE SEQ_STADIUM BETWEEN #{startNum} AND #{endNum}
+    </select>
+    
+    <!-- 경기장 이름에 예약된 정보를 가져온다 -->
+    <select id="getBookStadium" parameterType="java.lang.String" resultType="com.boot.finalpro.game.model.BookingDTO">
+    	SELECT * FROM BOOKING
+    	WHERE NAME_STADIUM=#{name_stadium}
+    </select>
+  
+  <!-- 경기장 선택된 날짜에 예약된 정보를 가져온다 -->
+  <select id="getBookList" parameterType="com.boot.finalpro.game.model.BookingDTO" resultType="com.boot.finalpro.game.model.BookBean">
+  	SELECT G.NAME_TEAM1, B.NAME_STADIUM, B.BDATE, B.BOOK_TIME
+	FROM GAME G, BOOKING B
+	WHERE G.SEQ_GAME=B.SEQ_GAME
+			AND BDATE=#{bdate} AND B.NAME_STADIUM LIKE '%'||#{name_stadium}||'%'
+  </select>
+
+</mapper>

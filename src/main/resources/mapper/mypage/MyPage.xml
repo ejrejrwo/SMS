@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="myPage">
+
+	<!-- 개인정보 변경 -->
+	<update id="UpdateMemberInfo" parameterType="com.boot.finalpro.member.model.MemberDTO">
+		UPDATE MEMBER
+		SET NAME=#{name}, ADDRESS=#{address},
+		BIRTHDAY=#{birthday}, PHONE=#{phone}, EMAIL=#{email},
+		HEIGHT=#{height}, WEIGHT=#{weight}
+		WHERE ID=#{id}
+	</update>
+
+	<update id="updateSMSMemberInfo" parameterType="com.boot.finalpro.member.model.SMS_MemberDTO">
+		UPDATE SMS_MEM
+		SET PW=#{userpw}
+		WHERE ID=#{userid}
+	</update>
+
+	<!-- 개인정보 가져오기 -->
+	<select id="findOneMemberById" parameterType="java.lang.String" resultType="com.boot.finalpro.member.model.MemberDTO">
+		SELECT * FROM MEMBER
+		WHERE ID=#{id}
+	</select>
+
+	<!-- 개인정보삭제 -->
+	<update id="deleteById" parameterType="java.lang.String">
+		UPDATE AUTHORITIES
+		SET AUTHORITY = 'ROLE_DELETE'
+		WHERE ID=#{userId}
+	</update>
+	
+	<!-- 충전시 정보변경 -->
+	<update id="ChangeInfoMoney" parameterType="com.boot.finalpro.member.model.MemberDTO">
+		UPDATE MEMBER
+		SET TOTAL_MONEY=TOTAL_MONEY+#{money}, NOW_MONEY=NOW_MONEY+#{money}
+		WHERE ID=#{id}
+	</update>
+	
+	<!-- 쪽지 -->
+	<select id="findAllSendMessageListById" parameterType="com.boot.finalpro.mypage.util.BbsParam" resultType="com.boot.finalpro.mypage.model.MessageDTO">
+		SELECT SEQ, SEND_ID, RECEIVE_ID, CONTENT, READING, WDATE, RDATE, SEND_DEL, RECEIVE_DEL
+		FROM(SELECT ROW_NUMBER()OVER(ORDER BY SEQ DESC) AS RNUM, 
+		SEQ, SEND_ID, RECEIVE_ID, CONTENT, READING, WDATE, RDATE, SEND_DEL, RECEIVE_DEL
+		FROM MESSAGE
+		WHERE SEND_ID=#{id} AND SEND_DEL=0
+		
+		  	<if test="s_category == 'contents'">
+		  		AND CONTENT LIKE '%'||#{s_keyword}||'%'
+		  	</if>
+		  	<if test="s_category == 'writer'">
+		  		AND RECEIVE_ID LIKE '%'||#{s_keyword}||'%'
+		  	</if>
+		 ) A
+  		 WHERE RNUM BETWEEN ${start} AND ${end}
+	</select>
+	
+	<select id="findAllSendMessageCountById" parameterType="com.boot.finalpro.mypage.util.BbsParam" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM MESSAGE
+		WHERE SEND_ID=#{id} AND SEND_DEL=0
+          <if test="s_category == 'writer'">
+             AND RECEIVE_ID LIKE '%'||#{s_keyword}||'%'
+          </if>
+          <if test="s_category == 'contents'">
+             AND CONTENT LIKE '%'||#{s_keyword}||'%'
+          </if>
+	</select>
+	
+	<select id="findAllReceiveMessageListById" parameterType="com.boot.finalpro.mypage.util.BbsParam" resultType="com.boot.finalpro.mypage.model.MessageDTO">
+		SELECT SEQ, SEND_ID, RECEIVE_ID, CONTENT, READING, WDATE, RDATE, SEND_DEL, RECEIVE_DEL
+		FROM(SELECT ROW_NUMBER()OVER(ORDER BY SEQ DESC) AS RNUM, 
+		SEQ, SEND_ID, RECEIVE_ID, CONTENT, READING, WDATE, RDATE, SEND_DEL, RECEIVE_DEL
+		FROM MESSAGE
+		WHERE RECEIVE_ID=#{id} AND RECEIVE_DEL=0
+		  	<if test="s_category == 'contents'">
+		  		AND CONTENT LIKE '%'||#{s_keyword}||'%'
+		  	</if>
+		  	<if test="s_category == 'writer'">
+		  		AND SEND_ID LIKE '%'||#{s_keyword}||'%'
+		  	</if>
+		 ) A
+  		 WHERE RNUM BETWEEN ${start} AND ${end}
+	</select>
+	
+	<select id="findAllReceiveMessageCountById" parameterType="com.boot.finalpro.mypage.util.BbsParam" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM MESSAGE
+		WHERE RECEIVE_ID=#{id} AND RECEIVE_DEL=0
+          <if test="s_category == 'writer'">
+             AND SEND_ID LIKE '%'||#{s_keyword}||'%'
+          </if>
+          <if test="s_category == 'contents'">
+             AND CONTENT LIKE '%'||#{s_keyword}||'%'
+          </if>
+	</select>
+
+	<select id="findOneMessageBySeq" parameterType="java.lang.Integer" resultType="com.boot.finalpro.mypage.model.MessageDTO">
+		SELECT * FROM MESSAGE
+		WHERE SEQ=#{seq}
+	</select>
+
+	<update id="UpdateReadingBySeq" parameterType="java.lang.Integer">
+		UPDATE MESSAGE
+		SET READING=1, RDATE=SYSDATE
+		WHERE SEQ=#{seq} AND READING=0
+	</update>
+	
+	<update id="deleteSendMessageBySeq" parameterType="java.lang.Integer">
+		UPDATE MESSAGE
+		SET SEND_DEL=1
+		WHERE SEQ=#{seq}
+	</update>
+	
+	<update id="deleteReceiveMessageBySeq" parameterType="java.lang.Integer">
+		UPDATE MESSAGE
+		SET RECEIVE_DEL=1
+		WHERE SEQ=#{seq}
+	</update>
+	
+	<select id="receiveIdCheck" parameterType="com.boot.finalpro.mypage.model.MessageDTO" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM MEMBER
+		WHERE ID=#{receive_id} 
+		AND ID<![CDATA[<>]]>#{send_id}
+	</select>
+
+	<insert id="SaveMessage" parameterType="com.boot.finalpro.mypage.model.MessageDTO">
+		INSERT INTO MESSAGE
+		VALUES(MESSAGE_SEQ.NEXTVAL, #{send_id}, (SELECT ID FROM MEMBER WHERE ID=#{receive_id}), #{content}, 0, SYSDATE, NULL, 0, 0)
+	</insert>
+
+	<select id="findMessageBlacklist" parameterType="com.boot.finalpro.mypage.model.MessageDTO" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM MESSAGE_BLACKLIST
+		WHERE #{send_id} IN (SELECT BLACK_ID 
+								FROM MESSAGE_BLACKLIST 
+								WHERE MY_ID=#{receive_id})
+	</select>
+
+	<select id="FindMessageIdById" resultType="java.lang.String" parameterType="hashmap">
+		SELECT ID
+		FROM MEMBER
+		WHERE ID LIKE '%'||#{value}||'%'
+		AND ID NOT IN(#{id})
+		ORDER BY LENGTH(id)
+	</select>
+
+	<!-- 내 작성 게시물 -->
+	<select id="findAllBBSListById" parameterType="com.boot.finalpro.mypage.util.BbsParam" resultType="com.boot.finalpro.teambbs.model.TeamBBSDTO">
+	  SELECT SEQ, ID, TEAM_NAME, TITLE, CONTENT, LIKE_COUNT, REPORT_COUNT, SUBJECT_CATEGORY, READ_COUNT, WDATE, FILE_NAME, ORIGINAL_FILE_NAME
+ 	  FROM(SELECT ROW_NUMBER()OVER(ORDER BY SEQ DESC) AS RNUM, 
+       SEQ, ID, TEAM_NAME, TITLE, CONTENT, LIKE_COUNT, REPORT_COUNT,  SUBJECT_CATEGORY, READ_COUNT, WDATE, FILE_NAME, ORIGINAL_FILE_NAME
+       FROM TEAM_BBS
+		WHERE ID=#{id}
+		 
+          <if test="s_category == 'title'">
+             AND TITLE LIKE '%'||#{s_keyword}||'%'
+          </if>
+          <if test="s_category == 'contents'">
+             AND CONTENT LIKE '%'||#{s_keyword}||'%'
+          </if>
+          
+		 ) A
+  		 WHERE RNUM BETWEEN ${start} AND ${end}
+	</select>
+	
+	<select id="findAllBBSCountById" parameterType="com.boot.finalpro.mypage.util.BbsParam" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM TEAM_BBS
+		WHERE ID=#{id}
+		<if test="s_category != null and s_category != ''
+       				and s_keyword != null and s_keyword != ''">
+          <if test="s_category == 'title'">
+             AND TITLE LIKE '%'||#{s_keyword}||'%'
+          </if>
+          <if test="s_category == 'contents'">
+             AND CONTENT LIKE '%'||#{s_keyword}||'%'
+          </if>
+   		</if>
+	</select>
+	
+	<!-- 내가 좋아요 누른 게시물 -->
+	<select id="findAllLikeListById" parameterType="com.boot.finalpro.mypage.util.BbsParam" resultType="com.boot.finalpro.teambbs.model.TeamBBSDTO">
+		SELECT SEQ, ID, TEAM_NAME, TITLE, CONTENT, LIKE_COUNT, REPORT_COUNT, SUBJECT_CATEGORY, READ_COUNT, WDATE, FILE_NAME, ORIGINAL_FILE_NAME
+ 	  FROM(SELECT ROW_NUMBER()OVER(ORDER BY SEQ DESC) AS RNUM, 
+       SEQ, ID, TEAM_NAME, TITLE, CONTENT, LIKE_COUNT, REPORT_COUNT,  SUBJECT_CATEGORY, READ_COUNT, WDATE, FILE_NAME, ORIGINAL_FILE_NAME
+       FROM TEAM_BBS
+       WHERE SEQ IN(SELECT BBS_LIKE FROM OVERLAP WHERE ID=#{id})
+       <if test="s_category == 'title'">
+		  		AND TITLE LIKE '%'||#{s_keyword}||'%'
+		  	</if>
+		  	<if test="s_category == 'contents'">
+		  		AND CONTENT LIKE '%'||#{s_keyword}||'%'
+		  	</if>
+		  	<if test="s_category == 'writer'">
+		  		AND ID LIKE '%'||#{s_keyword}||'%'
+		  	</if>
+          
+		 ) A
+  		 WHERE RNUM BETWEEN ${start} AND ${end}
+	</select>
+	
+ 	<select id="findAllLikeCountById" parameterType="com.boot.finalpro.mypage.util.BbsParam" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM TEAM_BBS
+		WHERE SEQ IN(SELECT BBS_LIKE FROM OVERLAP WHERE ID=#{id})
+		<if test="s_category == 'title'">
+		  		AND TITLE LIKE '%'||#{s_keyword}||'%'
+		  	</if>
+		  	<if test="s_category == 'contents'">
+		  		AND CONTENT LIKE '%'||#{s_keyword}||'%'
+		  	</if>
+		  	<if test="s_category == 'writer'">
+		  		AND ID LIKE '%'||#{s_keyword}||'%'
+		  	</if>
+	</select>
+
+	<!-- 내 베팅목록 가져오기 -->
+	<select id="findAllBetListById" parameterType="com.boot.finalpro.mypage.util.BbsParam" resultType="com.boot.finalpro.mypage.util.MyBetParam">
+	  SELECT CATEGORY, NAME_TEAM1, NAME_TEAM2, GDATE, PAYOUT_R1, PAYOUT_R2, GAME_RESULT, TEAM_NAME, BETTING_MONEY
+       FROM(SELECT ROW_NUMBER()OVER(ORDER BY BET.SEQ_BET) AS RNUM,
+        G.CATEGORY, G.NAME_TEAM1, G.NAME_TEAM2, G.GDATE, G.PAYOUT_R1, G.PAYOUT_R2, G.GAME_RESULT, BET.TEAM_NAME, BET.BETTING_MONEY
+        FROM GAME G, BETTING BET
+        WHERE BET.ID=#{id} AND G.SEQ_GAME=BET.SEQ_GAME
+        )WHERE RNUM BETWEEN ${start} AND ${end}
+	</select>
+	
+	
+	<select id="findAllBetCountById" parameterType="java.lang.String" resultType="java.lang.Integer">
+	  SELECT NVL(COUNT(*), 0)
+       FROM(SELECT ROW_NUMBER()OVER(ORDER BY G.SEQ_GAME) AS RNUM,
+        G.CATEGORY, G.NAME_TEAM1, G.NAME_TEAM2, G.GDATE, G.PAYOUT_R1, G.PAYOUT_R2, G.GAME_RESULT, BET.TEAM_NAME, BET.BETTING_MONEY
+        FROM GAME G, BETTING BET
+        WHERE BET.ID=#{id} AND G.SEQ_GAME=BET.SEQ_GAME)
+	</select>
+	
+	<!-- 환전신청 -->
+	<insert id="saveExchange" parameterType="com.boot.finalpro.mypage.model.ExchangeDTO">
+		INSERT INTO EXCHANGE
+		VALUES(EXCHANGE_SEQ.NEXTVAL, #{id}, #{bank}, #{bank_number}, #{exchange_money}, SYSDATE, 0)
+	</insert>
+	
+	<select id="exchangeCheckCountById" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM EXCHANGE
+		WHERE ID=#{id} AND EX_CHECK=0
+	</select>
+	
+	<select id="findAllExchangeListById" parameterType="com.boot.finalpro.mypage.util.BbsParam" resultType="com.boot.finalpro.mypage.model.ExchangeDTO">
+		SELECT SEQ, ID, BANK, BANK_NUMBER, EXCHANGE_MONEY, EXDATE, EX_CHECK
+		FROM(SELECT ROW_NUMBER()OVER(ORDER BY EXDATE DESC) AS RNUM,
+			SEQ, ID, BANK, BANK_NUMBER, EXCHANGE_MONEY, EXDATE, EX_CHECK
+			FROM EXCHANGE
+			WHERE ID=#{id}
+		)
+		WHERE RNUM BETWEEN ${start} AND ${end}
+	</select>
+	
+	<select id="findAllExchangeCountById" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM EXCHANGE
+		WHERE ID=#{id}
+	</select>
+	
+	<update id="updateMoneyById" parameterType="com.boot.finalpro.mypage.model.ExchangeDTO">
+		UPDATE MEMBER
+		SET NOW_MONEY = NOW_MONEY - #{exchange_money}	
+		WHERE ID=#{id}
+	</update>
+	
+	<!-- 수익, 지출 -->
+	
+	<insert id="saveProfit" parameterType="com.boot.finalpro.mypage.model.ProfitDTO">
+		INSERT INTO PROFIT
+		VALUES(PROFIT_SEQ.NEXTVAL, #{id}, SYSDATE, #{profit_money})	
+	</insert>
+	
+	<insert id="saveSpend" parameterType="com.boot.finalpro.mypage.model.SpendDTO">
+		INSERT INTO SPEND
+		VALUES(SPEND_SEQ.NEXTVAL, #{id}, NULL, #{spend_money})	
+	</insert>
+	
+	<!-- 내 수익 내역 -->
+	
+	<select id="findAllPayInfoListById" parameterType="com.boot.finalpro.mypage.util.BbsParam" resultType="com.boot.finalpro.mypage.model.ProfitDTO">
+		SELECT SEQ, ID, PDATE, PROFIT_MONEY
+		FROM(SELECT ROW_NUMBER()OVER(ORDER BY SEQ DESC) AS RNUM,
+			SEQ, ID, PDATE, PROFIT_MONEY
+			FROM PROFIT
+			WHERE ID=#{id}
+		)
+		WHERE RNUM BETWEEN ${start} AND ${end}
+		
+	</select>
+	
+	<select id="findAllPayInfoCountById" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM PROFIT
+		WHERE ID=#{ID}
+	</select>
+	
+	<!-- 내가 신청한 팀 목록 -->
+	<select id="findByMyAppList" parameterType="com.boot.finalpro.mypage.util.BbsParam" resultType="com.boot.finalpro.team.model.TeamApplicationDTO">
+		SELECT SEQ, ID, TEAM_NAME, CONTENT
+		FROM (SELECT ROW_NUMBER()OVER(ORDER BY SEQ DESC) AS RNUM,
+		SEQ, ID, TEAM_NAME, CONTENT
+		FROM TEAM_APPLICATION
+		WHERE ID=#{id}
+		) WHERE RNUM BETWEEN ${start} AND ${end}
+	</select>
+	
+	<select id="findByMyAppListCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM TEAM_APPLICATION
+		WHERE ID=#{id}
+	</select>
+	
+	<!-- 내가 신청한 팀 목록 삭제 -->
+	<delete id="deleteTeamApplicationBySeq" parameterType="java.lang.Integer">
+		DELETE FROM TEAM_APPLICATION
+		WHERE SEQ=#{seq}
+	</delete>
+	<!--  메세지 체크박스 삭제 -->
+	<update id="deleteAllSendMessageBySeq" parameterType="hashmap">
+		UPDATE MESSAGE
+		SET SEND_DEL=1
+		WHERE SEQ=#{seq}
+	</update>
+	<!-- 쪽지삭제 -->
+	<update id="deleteAllReceiveMessageBySeq" parameterType="hashmap">
+		UPDATE MESSAGE
+		SET RECEIVE_DEL=1
+		WHERE SEQ=#{seq}
+	</update>
+	
+	<!-- 쪽지 수신거부 여부 확인 -->
+	<select id="findMessageIsBlacklist" parameterType="com.boot.finalpro.mypage.model.MessageDTO" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM MESSAGE_BLACKLIST
+		WHERE MY_ID=#{receive_id} AND BLACK_ID=#{send_id}
+	</select>
+	<!-- 수신거부 확인 후 없을경우 수신거부 -->
+	<insert id="saveMessageBlacklist" parameterType="com.boot.finalpro.mypage.model.MessageDTO">
+		INSERT INTO MESSAGE_BLACKLIST
+		VALUES(#{receive_id}, #{send_id}, SYSDATE)
+	</insert>
+	<!-- 수신거부 있을경우 삭제, 수신거부 목록에서 삭제-->
+	<delete id="deleteMessageBlacklist" parameterType="com.boot.finalpro.mypage.model.MessageDTO">
+		DELETE MESSAGE_BLACKLIST
+		WHERE MY_ID=#{receive_id} AND BLACK_ID=#{send_id}
+	</delete>
+	<!-- 수신거부 목록 숫자 가져오기 -->
+	<select id="findAllBlackListCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM MESSAGE_BLACKLIST
+		WHERE MY_ID=#{userid}
+	</select>
+	
+	<!-- 수신거부 목록 가져오기 -->
+	<select id="findAllBlackListById" parameterType="com.boot.finalpro.mypage.util.BbsParam" resultType="com.boot.finalpro.mypage.model.MessageBlackListDTO">
+		SELECT MY_ID, BLACK_ID, BDATE
+		FROM(SELECT ROW_NUMBER()OVER(ORDER BY BDATE) AS RNUM,
+		MY_ID, BLACK_ID, BDATE
+		FROM MESSAGE_BLACKLIST
+		WHERE MY_ID=#{id} 
+		<if test="s_keyword != null ">
+		  		AND BLACK_ID LIKE '%'||#{s_keyword}||'%'
+		 </if>
+		 ) A
+  		 WHERE RNUM BETWEEN ${start} AND ${end}
+	</select>
+	
+	<!-- 권한 조회 -->
+	<select id="findAuthById" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT AUTHORITY
+		FROM AUTHORITIES
+		WHERE ID=#{id}
+	</select>
+	
+</mapper>

@@ -1,0 +1,2234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Admin">
+	<!-- 게시물 갯수 구하기 -->
+	<select id="getAllNotice" parameterType="com.boot.finalpro.admin.util.SearchUtillDto" resultType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM NOTICE
+		<choose>
+			<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+				<choose>
+					<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+						WHERE 1=1 AND ID=#{searchText} AND WDATE BETWEEN #{begin} AND #{end}
+					</when>
+					<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+						WHERE 1=1 AND TITLE LIKE '%'||#{searchText}||'%' AND WDATE BETWEEN #{begin} AND #{end}
+					</when>
+					<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+						WHERE 1=1 AND CONTENT LIKE '%'||#{searchText}||'%' AND WDATE BETWEEN #{begin} AND #{end}
+					</when>
+					<otherwise>	<!-- 검색어가 없을경우  -->
+						WHERE 1=1 AND WDATE BETWEEN #{begin} AND #{end}
+					</otherwise>
+				</choose> 
+			</when>
+			<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+				<choose>
+					<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+						WHERE 1=1 AND ID=#{searchText} AND WDATE <![CDATA[>=]]> #{begin}
+					</when>
+					<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+						WHERE 1=1 AND TITLE LIKE '%'||#{searchText}||'%' AND WDATE <![CDATA[>=]]> #{begin}
+					</when>
+					<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+						WHERE 1=1 AND CONTENT LIKE '%'||#{searchText}||'%' AND WDATE <![CDATA[>=]]> #{begin}
+					</when>
+					<otherwise>	<!-- 검색어가 없을경우  -->
+						WHERE 1=1 AND WDATE <![CDATA[>=]]> #{begin}
+					</otherwise>
+				</choose> 			
+			</when>
+			<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+				<choose>
+					<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+						WHERE 1=1 AND ID=#{searchText} AND WDATE <![CDATA[<=]]> #{end}
+					</when>
+					<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+						WHERE 1=1 AND TITLE LIKE '%'||#{searchText}||'%' AND WDATE <![CDATA[<=]]> #{end}
+					</when>
+					<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+						WHERE 1=1 AND CONTENT LIKE '%'||#{searchText}||'%' AND WDATE <![CDATA[<=]]> #{end}
+					</when>
+					<otherwise>	<!-- 검색어가 없을경우  -->
+						WHERE 1=1 AND WDATE <![CDATA[<=]]> #{end}
+					</otherwise>
+				</choose>			
+			</when>
+			<otherwise>	<!-- 날짜 선택 없을경우 -->
+				<choose>
+					<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+						WHERE 1=1 AND ID=#{searchText}
+					</when>
+					<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+						WHERE 1=1 AND TITLE LIKE '%'||#{searchText}||'%'
+					</when>
+					<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+						WHERE 1=1 AND CONTENT LIKE '%'||#{searchText}||'%'
+					</when>
+					<otherwise>	<!-- 검색어가 없을경우  -->
+						WHERE 1=1
+					</otherwise>
+				</choose>					
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- List 가져오기 -->
+	<select id="getNoticeList" parameterType="com.boot.finalpro.admin.util.SearchUtillDto" resultType="com.boot.finalpro.admin.model.NoticeDTO">
+		SELECT SEQ,ID,TITLE,CONTENT,WDATE,READ_COUNT,FILE_ON
+		FROM (SELECT ROW_NUMBER()OVER(ORDER BY SEQ DESC)AS RNUM,SEQ,ID,TITLE,CONTENT,WDATE,READ_COUNT,FILE_ON FROM NOTICE
+		<choose>
+			<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+				<choose>
+					<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+						WHERE 1=1 AND ID=#{searchText} AND WDATE BETWEEN #{begin} AND #{end}
+						ORDER BY SEQ DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+						WHERE 1=1 AND TITLE LIKE '%'||#{searchText}||'%' AND WDATE BETWEEN #{begin} AND #{end}
+						ORDER BY SEQ DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+						WHERE 1=1 AND CONTENT LIKE '%'||#{searchText}||'%' AND WDATE BETWEEN #{begin} AND #{end}
+						ORDER BY SEQ DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<otherwise>	<!-- 검색어가 없을경우  -->
+						WHERE 1=1 AND WDATE BETWEEN #{begin} AND #{end}
+						ORDER BY SEQ DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</otherwise>
+				</choose> 
+			</when>
+			<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+				<choose>
+					<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+						WHERE 1=1 AND ID=#{searchText} AND WDATE <![CDATA[>=]]> #{begin}
+						ORDER BY SEQ DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+						WHERE 1=1 AND TITLE LIKE '%'||#{searchText}||'%' AND WDATE <![CDATA[>=]]> #{begin}
+						ORDER BY SEQ DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+						WHERE 1=1 AND CONTENT LIKE '%'||#{searchText}||'%' AND WDATE <![CDATA[>=]]> #{begin}
+						ORDER BY SEQ DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<otherwise>	<!-- 검색어가 없을경우  -->
+						WHERE 1=1 AND WDATE <![CDATA[>=]]> #{begin}
+						ORDER BY SEQ DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</otherwise>
+				</choose> 			
+			</when>
+			<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+				<choose>
+					<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+						WHERE 1=1 AND ID=#{searchText} AND WDATE <![CDATA[<=]]> #{end}
+						ORDER BY SEQ DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+						WHERE 1=1 AND TITLE LIKE '%'||#{searchText}||'%' AND WDATE <![CDATA[<=]]> #{end}
+						ORDER BY SEQ DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+						WHERE 1=1 AND CONTENT LIKE '%'||#{searchText}||'%' AND WDATE <![CDATA[<=]]> #{end}
+						ORDER BY SEQ DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<otherwise>	<!-- 검색어가 없을경우  -->
+						WHERE 1=1 AND WDATE <![CDATA[<=]]> #{end}
+						ORDER BY SEQ DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</otherwise>
+				</choose>			
+			</when>
+			<otherwise>	<!-- 날짜 선택 없을경우 -->
+				<choose>
+					<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+						WHERE 1=1 AND ID=#{searchText}
+						ORDER BY SEQ DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+						WHERE 1=1 AND TITLE LIKE '%'||#{searchText}||'%'
+						ORDER BY SEQ DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+						WHERE 1=1 AND CONTENT LIKE '%'||#{searchText}||'%'
+						ORDER BY SEQ DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<otherwise>	<!-- 검색어가 없을경우  -->
+						WHERE 1=1
+						ORDER BY SEQ DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</otherwise>
+				</choose>					
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- Notice write -->
+	<insert id="noticeWrite" parameterType="com.boot.finalpro.admin.model.NoticeDTO">
+		INSERT INTO NOTICE(SEQ,ID,TITLE,CONTENT,WDATE,READ_COUNT,FILE_ON)
+		VALUES (NOTICE_SEQ.NEXTVAL,#{id},#{title},#{content},SUBSTR(SYSDATE,1,10),0,#{file_on})
+	</insert>
+	<insert id="noticeFile" parameterType="com.boot.finalpro.admin.model.NoticeSubDTO">
+		INSERT INTO NOTICE_FILE(FILE_SEQ,SEQ,UPLOADNAME,ORIGINALNAME,DOWN_COUNT)
+		VALUES(FILE_SEQ.NEXTVAL,(SELECT MAX(SEQ) FROM NOTICE WHERE FILE_ON='Y'),#{uploadName},#{originalName},0)
+	</insert>
+
+	<!-- Notice Detail -->
+	<select id="noticeDetail" parameterType="java.lang.Integer" resultType="com.boot.finalpro.admin.model.NoticeDTO">
+		SELECT *
+		FROM NOTICE
+		WHERE SEQ=#{seq}
+	</select>
+	<!-- Notice File -->
+	<select id="noticeFileDetail" parameterType="java.lang.Integer" resultType="com.boot.finalpro.admin.model.NoticeSubDTO">
+		SELECT *
+		FROM NOTICE_FILE
+		WHERE SEQ=#{seq}
+		ORDER BY FILE_SEQ DESC
+	</select>
+	<!-- Notice File Detail -->
+	<select id="noticeFile2" parameterType="java.lang.Integer" resultType="com.boot.finalpro.admin.model.NoticeSubDTO">
+		SELECT *
+		FROM NOTICE_FILE
+		WHERE FILE_SEQ=#{file_seq}
+	</select>
+	<!-- Notice update readcount -->
+	<update id="readCount" parameterType="java.lang.Integer">
+		UPDATE NOTICE
+		SET READ_COUNT = READ_COUNT+1
+		WHERE SEQ=#{seq}
+	</update>
+	<!-- Notice FileDownCount Upload -->
+	<update id="downCount" parameterType="java.lang.Integer">
+		UPDATE NOTICE_FILE
+		SET DOWN_COUNT = DOWN_COUNT+1
+		WHERE FILE_SEQ=#{file_seq}
+	</update>
+	<!-- Notice Delete -->
+	<delete id="noticeDelete" parameterType="java.lang.Integer">
+		DELETE FROM NOTICE
+		WHERE SEQ=#{seq}
+	</delete>
+	<!-- Notice Delete -->
+	<delete id="noticeFileDelete" parameterType="java.lang.Integer">
+		DELETE FROM NOTICE_FILE
+		WHERE SEQ=#{seq}
+	</delete>
+	<!-- Notice FileDel -->
+	<delete id="notice_file_del" parameterType="java.lang.Integer">
+		DELETE FROM NOTICE_FILE
+		WHERE file_seq=#{file_seq}
+	</delete>
+	<!-- Notice FileAccount -->
+	<select id="notice_file_account" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM NOTICE_FILE
+		WHERE SEQ=#{seq}
+	</select>
+	
+	<!-- Notice update -->
+	<update id="notice_file_update" parameterType="com.boot.finalpro.admin.model.NoticeDTO">
+		UPDATE NOTICE
+		SET TITLE=#{title}, CONTENT=#{content}, FILE_ON=#{file_on}
+		WHERE SEQ=#{seq}
+	</update>
+	<!-- Notice_File Update Insert -->
+	<insert id="notice_File_update" parameterType="com.boot.finalpro.admin.model.NoticeSubDTO">
+		INSERT INTO NOTICE_FILE(FILE_SEQ,SEQ,UPLOADNAME,ORIGINALNAME,DOWN_COUNT)
+		VALUES(FILE_SEQ.NEXTVAL,#{seq},#{uploadName},#{originalName},0)
+	</insert>		
+	
+	<!-- 월별 일정 -->
+	<select id="monthlyGame" parameterType="java.lang.String" resultType="com.boot.finalpro.game.model.GameDTO">
+		SELECT *
+		FROM GAME
+		WHERE 1=1 AND SUBSTR(GDATE,1,7) = #{ym} AND DEL=0 AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+		ORDER BY SEQ_GAME DESC
+	</select>
+	
+	<!-- 일별 게임 일정 -->
+	<select id="dailyGame" parameterType="java.lang.String" resultType="com.boot.finalpro.game.model.GameDTO">
+		SELECT *
+		FROM GAME
+		WHERE 1=1 AND SUBSTR(GDATE,1,10) = #{ymd} AND DEL=0 AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+		ORDER BY SEQ_GAME DESC
+	</select>   
+
+ 	<!-- MemberList Count Get -->
+	<select id="allMemberCount" parameterType="com.boot.finalpro.admin.util.SearchUtillDto" resultType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM MEMBER m,AUTHORITIES a
+		<choose>
+			<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+				<choose>
+					<when test="category == 'NAME'">	<!-- 검색어가 이름 -->
+						WHERE 1=1 AND m.NAME=#{searchText} AND m.REGIDATE BETWEEN #{begin} AND #{end} m.ID=a.ID AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+					</when>
+					<when test="category == 'ADDRESS'"> <!-- 검색어가 주소 -->
+						WHERE 1=1 AND m.ADDRESS LIKE '%'||#{searchText}||'%' AND m.REGIDATE BETWEEN #{begin} AND #{end} AND m.ID=a.ID AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+					</when>
+					<when test="category == 'PHONE'"> <!-- 검색어가 전화번호 -->
+						WHERE 1=1 AND m.PHONE LIKE '%'||#{searchText}||'%' AND m.REGIDATE BETWEEN #{begin} AND #{end} AND m.ID=a.ID AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+					</when>
+					<otherwise>	<!-- 검색어가 없을경우  -->
+						WHERE 1=1 AND m.REGIDATE BETWEEN #{begin} AND #{end} AND m.ID=a.ID AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+					</otherwise>
+				</choose> 
+			</when>
+			<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+				<choose>
+					<when test="category == 'NAME'">	<!-- 검색어가 이름 -->
+						WHERE 1=1 AND m.NAME=#{searchText} AND m.REGIDATE <![CDATA[>=]]> #{begin} AND m.ID=a.ID AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+					</when>
+					<when test="category == 'ADDRESS'"> <!-- 검색어가 주소 -->
+						WHERE 1=1 AND m.ADDRESS LIKE '%'||#{searchText}||'%' AND m.REGIDATE  <![CDATA[>=]]> #{begin} AND m.ID=a.ID AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+					</when>
+					<when test="category == 'PHONE'"> <!-- 검색어가 전화번호 -->
+						WHERE 1=1 AND m.PHONE LIKE '%'||#{searchText}||'%' AND m.REGIDATE  <![CDATA[>=]]> #{begin} AND m.ID=a.ID AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+					</when>
+					<otherwise>	<!-- 검색어가 없을경우  -->
+						WHERE 1=1 AND m.REGIDATE  <![CDATA[>=]]> #{begin}
+					</otherwise>
+				</choose> 			
+			</when>
+			<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+				<choose>
+					<when test="category == 'NAME'">	<!-- 검색어가 이름 -->
+						WHERE 1=1 AND m.NAME=#{searchText} AND REGIDATE  <![CDATA[<=]]> #{end}
+					</when>
+					<when test="category == 'ADDRESS'"> <!-- 검색어가 주소 -->
+						WHERE 1=1 AND m.ADDRESS LIKE '%'||#{searchText}||'%' AND m.REGIDATE  <![CDATA[<=]]> #{end} AND m.ID=a.ID AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+					</when>
+					<when test="category == 'PHONE'"> <!-- 검색어가 전화번호 -->
+						WHERE 1=1 AND m.PHONE LIKE '%'||#{searchText}||'%' AND m.REGIDATE  <![CDATA[<=]]> #{end} AND m.ID=a.ID AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+					</when>
+					<otherwise>	<!-- 검색어가 없을경우  -->
+						WHERE 1=1 AND m.REGIDATE  <![CDATA[<=]]> #{end} AND m.ID=a.ID AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+					</otherwise>
+				</choose>			
+			</when>
+			<otherwise>	<!-- 날짜 선택 없을경우 -->
+				<choose>
+					<when test="category == 'NAME'">	<!-- 검색어가 이름 -->
+						WHERE 1=1 AND m.NAME=#{searchText} AND m.ID=a.ID AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+					</when>
+					<when test="category == 'ADDRESS'"> <!-- 검색어가 주소 -->
+						WHERE 1=1 AND m.ADDRESS LIKE '%'||#{searchText}||'%' AND m.ID=a.ID AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+					</when>
+					<when test="category == 'PHONE'"> <!-- 검색어가 전화번호 -->
+						WHERE 1=1 AND m.PHONE LIKE '%'||#{searchText}||'%' AND m.ID=a.ID AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+					</when>
+					<otherwise>	<!-- 검색어가 없을경우  -->
+						WHERE 1=1 AND m.ID=a.ID AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+					</otherwise>
+				</choose>					
+			</otherwise>
+		</choose>
+	</select>
+
+
+	<!-- MemberListGet -->
+	<select id="memberListGet" parameterType="com.boot.finalpro.admin.util.SearchUtillDto" resultType="com.boot.finalpro.member.model.MemberDTO">
+		SELECT ID,NAME,ADDRESS,BIRTHDAY,PHONE,EMAIL,NOW_MONEY,TOTAL_MONEY,NOW_POINT,TOTAL_POINT,HEIGHT,WEIGHT,TEAM_NAME,REPORT_COUNT,REGIDATE
+		FROM (SELECT ROW_NUMBER()OVER(ORDER BY REGIDATE DESC)AS RNUM,m.ID,NAME,ADDRESS,BIRTHDAY,PHONE,EMAIL,NOW_MONEY,TOTAL_MONEY,NOW_POINT,TOTAL_POINT,HEIGHT,WEIGHT,TEAM_NAME,REPORT_COUNT,REGIDATE FROM MEMBER m, AUTHORITIES a
+		<choose>
+			<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+				<choose>
+					<when test="category == 'NAME'">	<!-- 검색어가 이름 -->
+						WHERE 1=1 AND NAME=#{searchText} AND REGIDATE BETWEEN #{begin} AND #{end} AND m.id=a.id AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+						ORDER BY REGIDATE DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<when test="category == 'ADDRESS'"> <!-- 검색어가 주소 -->
+						WHERE 1=1 AND ADDRESS LIKE '%'||#{searchText}||'%' AND REGIDATE BETWEEN #{begin} AND #{end} AND m.id=a.id AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+						ORDER BY REGIDATE DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<when test="category == 'PHONE'"> <!-- 검색어가 전화번호 -->
+						WHERE 1=1 AND PHONE LIKE '%'||#{searchText}||'%' AND REGIDATE BETWEEN #{begin} AND #{end} AND m.id=a.id AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+						ORDER BY REGIDATE DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<otherwise>	<!-- 검색어가 없을경우  -->
+						WHERE 1=1 AND REGIDATE BETWEEN #{begin} AND #{end} AND m.id=a.id AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+						ORDER BY REGIDATE DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</otherwise>
+				</choose> 
+			</when>
+			<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+				<choose>
+					<when test="category == 'NAME'">	<!-- 검색어가 이름 -->
+						WHERE 1=1 AND NAME=#{searchText} AND REGIDATE <![CDATA[>=]]> #{begin} AND m.id=a.id AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+						ORDER BY REGIDATE DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<when test="category == 'ADDRESS'"> <!-- 검색어가 주소 -->
+						WHERE 1=1 AND ADDRESS LIKE '%'||#{searchText}||'%' AND REGIDATE <![CDATA[>=]]> #{begin} AND m.id=a.id AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+						ORDER BY REGIDATE DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<when test="category == 'PHONE'"> <!-- 검색어가 전화번호 -->
+						WHERE 1=1 AND PHONE LIKE '%'||#{searchText}||'%' AND REGIDATE <![CDATA[>=]]> #{begin} AND m.id=a.id AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+						ORDER BY REGIDATE DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<otherwise>	<!-- 검색어가 없을경우  -->
+						WHERE 1=1 AND REGIDATE <![CDATA[>=]]> #{begin} AND m.id=a.id AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+						ORDER BY REGIDATE DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</otherwise>
+				</choose> 			
+			</when>
+			<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+				<choose>
+					<when test="category == 'NAME'">	<!-- 검색어가 이름 -->
+						WHERE 1=1 AND NAME=#{searchText} AND REGIDATE <![CDATA[<=]]> #{end} AND m.id=a.id AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+						ORDER BY REGIDATE DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<when test="category == 'ADDRESS'"> <!-- 검색어가 주소 -->
+						WHERE 1=1 AND ADDRESS LIKE '%'||#{searchText}||'%' AND REGIDATE <![CDATA[<=]]> #{end} AND m.id=a.id AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+						ORDER BY REGIDATE DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<when test="category == 'PHONE'"> <!-- 검색어가 전화번호 -->
+						WHERE 1=1 AND PHONE LIKE '%'||#{searchText}||'%' AND REGIDATE <![CDATA[<=]]> #{end} AND m.id=a.id AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE' 
+						ORDER BY REGIDATE DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<otherwise>	<!-- 검색어가 없을경우  -->
+						WHERE 1=1 AND REGIDATE <![CDATA[<=]]> #{end} AND m.id=a.id AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+						ORDER BY REGIDATE DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</otherwise>
+				</choose>			
+			</when>
+			<otherwise>	<!-- 날짜 선택 없을경우 -->
+				<choose>
+					<when test="category == 'NAME'">	<!-- 검색어가 이름 -->
+						WHERE 1=1 AND NAME=#{searchText} AND m.id=a.id AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+						ORDER BY REGIDATE DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<when test="category == 'ADDRESS'"> <!-- 검색어가 주소 -->
+						WHERE 1=1 AND ADDRESS LIKE '%'||#{searchText}||'%' AND m.id=a.id AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+						ORDER BY REGIDATE DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<when test="category == 'PHONE'"> <!-- 검색어가 전화번호 -->
+						WHERE 1=1 AND PHONE LIKE '%'||#{searchText}||'%' AND m.id=a.id AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+						ORDER BY REGIDATE DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</when>
+					<otherwise>	<!-- 검색어가 없을경우  -->
+						WHERE 1=1 AND m.id=a.id AND a.AUTHORITY != 'ROLE_ADMIN' AND a.AUTHORITY != 'ROLE_DELETE'
+						ORDER BY REGIDATE DESC)
+						WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+					</otherwise>
+				</choose>					
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 공지사항 이전글 -->
+	<select id="previousNotice" parameterType="java.lang.Integer" resultType="com.boot.finalpro.admin.model.NoticeDTO">
+	  SELECT *
+	  FROM NOTICE
+	  WHERE SEQ IN(SELECT MAX(SEQ) FROM NOTICE WHERE SEQ<![CDATA[<]]>${seq})
+	</select>
+	
+	<!-- 공지사항 다음글 -->
+	<select id="nextNotice" parameterType="java.lang.Integer" resultType="com.boot.finalpro.admin.model.NoticeDTO">
+	  SELECT *
+	  FROM NOTICE
+	  WHERE SEQ IN(SELECT MIN(SEQ) FROM NOTICE WHERE SEQ<![CDATA[>]]>${seq})
+	</select>	
+	
+	<!--회원 삭제  -->
+	<update id="deleteMember" parameterType="java.lang.String">
+		UPDATE AUTHORITIES
+		SET AUTHORITY = 'ROLE_DELETE'
+		WHERE ID=#{id}
+	</update>
+	<select id="memberDetail" parameterType="java.lang.String" resultType="com.boot.finalpro.member.model.MemberDTO">
+		SELECT *
+		FROM MEMBER
+		WHERE ID=#{id}	
+	</select>
+	
+	<!-- Daily 소득 불러오기 -->
+	<select id="dailyProfitMoney" resultType="java.lang.Integer">
+		SELECT NVL(SUM(PROFIT_MONEY),0)
+		FROM PROFIT
+		WHERE SUBSTR(PDATE,1,10) = SUBSTR(SYSDATE,1,10)
+	</select>
+	<!-- Daily 지출 불러오기 -->
+	<select id="dailySpendMoney"  resultType="java.lang.Integer">
+		SELECT NVL(SUM(SPEND_MONEY),0)
+		FROM SPEND
+		WHERE SUBSTR(SDATE,1,10) = SUBSTR(SYSDATE,1,10)
+	</select>
+	
+	<!-- 월별 소득 불러오기 -->
+	<select id="monthlyProfitMoney" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT NVL(SUM(PROFIT_MONEY),0)
+		FROM PROFIT
+		WHERE SUBSTR(PDATE,1,5) = #{ym}
+	</select>	
+	<!-- 월별 지출 불러오기 -->
+	<select id="monthlySpendMoney" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT NVL(SUM(SPEND_MONEY),0)
+		FROM SPEND
+		WHERE SUBSTR(SDATE,1,5) = #{ym}	
+	</select>
+	<!-- 이번달 종목별 카운트갯수 가져오기 -->
+	<select id="getGameCategoryCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(CATEGORY),0) 
+		FROM GAME
+		WHERE 1=1 AND CATEGORY = #{category} AND SUBSTR(SYSDATE,1,2)||'-'||SUBSTR(SYSDATE,4,2) = SUBSTR(GDATE,3,5) AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+	</select>				
+	
+	<!-- 경기 시작이 가장 임박한 10경기 선발 -->
+	<select id="recentlyGame" resultType="com.boot.finalpro.game.model.GameDTO">
+		SELECT SEQ_GAME,CATEGORY,NAME_TEAM1,NAME_TEAM2,GDATE,NAME_STADIUM,TITLE,CONTENT,DEL,PAYOUT_R1,PAYOUT_R2,SCORE1,SCORE2,GAME_RESULT,LEAGUE,READ_COUNT,WDATE
+		FROM(
+		SELECT ROW_NUMBER()OVER(ORDER BY ABS(TO_DATE(SYSDATE,'YY-MM-DD')-TO_DATE(SUBSTR(GDATE,1, 10)))ASC,SEQ_GAME ASC)AS RNUM,SEQ_GAME,CATEGORY,NAME_TEAM1,NAME_TEAM2,GDATE,NAME_STADIUM,TITLE,CONTENT,DEL,PAYOUT_R1,PAYOUT_R2,SCORE1,SCORE2,GAME_RESULT,LEAGUE,READ_COUNT,WDATE
+		FROM GAME)
+		WHERE 1=1 AND TO_DATE(SUBSTR(GDATE,1, 10))-TO_DATE(SYSDATE,'YY-MM-DD')<![CDATA[>=]]>0 AND RNUM<![CDATA[<=]]>10 AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL	
+	</select>
+	
+	<!-- 최근 10개 환전 신청 목록  -->
+	<select id="dontExchangeTop10" resultType="com.boot.finalpro.mypage.model.ExchangeDTO">
+		SELECT SEQ,ID,BANK,BANK_NUMBER,EXCHANGE_MONEY,EXDATE,EX_CHECK
+		FROM (
+		SELECT ROW_NUMBER()OVER(ORDER BY SEQ) AS RNUM,SEQ,ID,BANK,BANK_NUMBER,EXCHANGE_MONEY,EXDATE,EX_CHECK
+		FROM EXCHANGE
+		WHERE EX_CHECK = 0
+		)
+		WHERE RNUM<![CDATA[<=]]>10
+	</select>
+	
+	<!-- 환전 리스트 카운트 불러오기 -->
+	<select id="exchangeListCount" parameterType="com.boot.finalpro.admin.util.SearchUtill_ExchangeDto" resultType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM EXCHANGE
+		<choose>
+			<when test="ex_check == 1"> <!--환전 한 얘들 카운트  -->
+				<choose>
+					<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+						<choose>
+							<when test="category == 'ID'">	<!-- 검색어가 신청자 -->
+								WHERE 1=1 AND ID=#{searchText} AND EXDATE BETWEEN #{begin} AND #{end} AND EX_CHECK=1
+							</when>
+							<when test="category == 'BANK'"> <!-- 검색어가 은행명 -->
+								WHERE 1=1 AND BANK LIKE '%'||#{searchText}||'%' AND EXDATE BETWEEN #{begin} AND #{end} AND EX_CHECK=1
+							</when>
+							<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 계좌번호 -->
+								WHERE 1=1 AND BANK_NUMBER LIKE '%'||#{searchText}||'%' AND EXDATE BETWEEN #{begin} AND #{end} AND EX_CHECK=1
+							</when>
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND EXDATE BETWEEN #{begin} AND #{end} AND EX_CHECK=1
+							</otherwise>
+						</choose> 
+					</when>
+					<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+						<choose>
+							<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+								WHERE 1=1 AND ID=#{searchText} AND EXDATE <![CDATA[>=]]> #{begin} AND EX_CHECK=1
+							</when>
+							<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND BANK LIKE '%'||#{searchText}||'%' AND EXDATE <![CDATA[>=]]> #{begin} AND EX_CHECK=1
+							</when>
+							<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND BANK_NUMBER LIKE '%'||#{searchText}||'%' AND EXDATE <![CDATA[>=]]> #{begin} AND EX_CHECK=1
+							</when>
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND EXDATE <![CDATA[>=]]> #{begin} AND EX_CHECK=1
+							</otherwise>
+						</choose> 			
+					</when>
+					<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+						<choose>
+							<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+								WHERE 1=1 AND ID=#{searchText} AND EXDATE <![CDATA[<=]]> #{end} AND EX_CHECK=1
+							</when>
+							<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND BANK LIKE '%'||#{searchText}||'%' AND EXDATE <![CDATA[<=]]> #{end} AND EX_CHECK=1
+							</when>
+							<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND BANK_NUMBER LIKE '%'||#{searchText}||'%' AND EXDATE <![CDATA[<=]]> #{end} AND EX_CHECK=1
+							</when>
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND EXDATE <![CDATA[<=]]> #{end} AND EX_CHECK=1
+							</otherwise>
+						</choose>			
+					</when>
+					<otherwise>	<!-- 날짜 선택 없을경우 -->
+						<choose>
+							<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+								WHERE 1=1 AND ID=#{searchText} AND EX_CHECK=1
+							</when>
+							<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND BANK LIKE '%'||#{searchText}||'%' AND EX_CHECK=1
+							</when>
+							<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND BANK_NUMBER LIKE '%'||#{searchText}||'%' AND EX_CHECK=1
+							</when>
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND EX_CHECK=1
+							</otherwise>
+						</choose>					
+					</otherwise>
+				</choose>			
+			</when>
+			
+			<when test="ex_check == 0"><!--환전 안한 얘들 카운트  -->
+				<choose>
+					<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+						<choose>
+							<when test="category == 'ID'">	<!-- 검색어가 신청자 -->
+								WHERE 1=1 AND ID=#{searchText} AND EXDATE BETWEEN #{begin} AND #{end} AND EX_CHECK=0
+							</when>
+							<when test="category == 'BANK'"> <!-- 검색어가 은행명 -->
+								WHERE 1=1 AND BANK LIKE '%'||#{searchText}||'%' AND EXDATE BETWEEN #{begin} AND #{end} AND EX_CHECK=0
+							</when>
+							<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 계좌번호 -->
+								WHERE 1=1 AND BANK_NUMBER LIKE '%'||#{searchText}||'%' AND EXDATE BETWEEN #{begin} AND #{end} AND EX_CHECK=0
+							</when>
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND EXDATE BETWEEN #{begin} AND #{end} AND EX_CHECK=1
+							</otherwise>
+						</choose> 
+					</when>
+					<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+						<choose>
+							<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+								WHERE 1=1 AND ID=#{searchText} AND EXDATE <![CDATA[>=]]> #{begin} AND EX_CHECK=0
+							</when>
+							<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND BANK LIKE '%'||#{searchText}||'%' AND EXDATE <![CDATA[>=]]> #{begin} AND EX_CHECK=0
+							</when>
+							<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND BANK_NUMBER LIKE '%'||#{searchText}||'%' AND EXDATE <![CDATA[>=]]> #{begin} AND EX_CHECK=0
+							</when>
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND EXDATE <![CDATA[>=]]> #{begin} AND EX_CHECK=0
+							</otherwise>
+						</choose> 			
+					</when>
+					<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+						<choose>
+							<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+								WHERE 1=1 AND ID=#{searchText} AND EXDATE <![CDATA[<=]]> #{end} AND EX_CHECK=0
+							</when>
+							<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND BANK LIKE '%'||#{searchText}||'%' AND EXDATE <![CDATA[<=]]> #{end} AND EX_CHECK=0
+							</when>
+							<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND BANK_NUMBER LIKE '%'||#{searchText}||'%' AND EXDATE <![CDATA[<=]]> #{end} AND EX_CHECK=0
+							</when>
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND EXDATE <![CDATA[<=]]> #{end} AND EX_CHECK=0
+							</otherwise>
+						</choose>			
+					</when>
+					<otherwise>	<!-- 날짜 선택 없을경우 -->
+						<choose>
+							<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+								WHERE 1=1 AND ID=#{searchText} AND EX_CHECK=0
+							</when>
+							<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND BANK LIKE '%'||#{searchText}||'%' AND EX_CHECK=0
+							</when>
+							<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND BANK_NUMBER LIKE '%'||#{searchText}||'%' AND EX_CHECK=0
+							</when>
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND EX_CHECK=0
+							</otherwise>
+						</choose>					
+					</otherwise>
+				</choose>			
+			</when>
+			
+			<otherwise>	<!-- 모든경우 카운트 -->
+				<choose>
+					<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+						<choose>
+							<when test="category == 'ID'">	<!-- 검색어가 신청자 -->
+								WHERE 1=1 AND ID=#{searchText} AND EXDATE BETWEEN #{begin} AND #{end}
+							</when>
+							<when test="category == 'BANK'"> <!-- 검색어가 은행명 -->
+								WHERE 1=1 AND BANK LIKE '%'||#{searchText}||'%' AND EXDATE BETWEEN #{begin} AND #{end}
+							</when>
+							<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 계좌번호 -->
+								WHERE 1=1 AND BANK_NUMBER LIKE '%'||#{searchText}||'%' AND EXDATE BETWEEN #{begin} AND #{end}
+							</when>
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND EXDATE BETWEEN #{begin} AND #{end}
+							</otherwise>
+						</choose> 
+					</when>
+					<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+						<choose>
+							<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+								WHERE 1=1 AND ID=#{searchText} AND EXDATE <![CDATA[>=]]> #{begin}
+							</when>
+							<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND BANK LIKE '%'||#{searchText}||'%' AND EXDATE <![CDATA[>=]]> #{begin}
+							</when>
+							<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND BANK_NUMBER LIKE '%'||#{searchText}||'%' AND EXDATE <![CDATA[>=]]> #{begin}
+							</when>
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND EXDATE <![CDATA[>=]]> #{begin}
+							</otherwise>
+						</choose> 			
+					</when>
+					<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+						<choose>
+							<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+								WHERE 1=1 AND ID=#{searchText} AND EXDATE <![CDATA[<=]]> #{end}
+							</when>
+							<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND BANK LIKE '%'||#{searchText}||'%' AND EXDATE <![CDATA[<=]]> #{end}
+							</when>
+							<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND BANK_NUMBER LIKE '%'||#{searchText}||'%' AND EXDATE <![CDATA[<=]]> #{end}
+							</when>
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND EXDATE <![CDATA[<=]]> #{end}
+							</otherwise>
+						</choose>			
+					</when>
+					<otherwise>	<!-- 날짜 선택 없을경우 -->
+						<choose>
+							<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+								WHERE 1=1 AND ID=#{searchText}
+							</when>
+							<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND BANK LIKE '%'||#{searchText}||'%'
+							</when>
+							<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND BANK_NUMBER LIKE '%'||#{searchText}||'%'
+							</when>
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1
+							</otherwise>
+						</choose>					
+					</otherwise>
+				</choose>			
+			</otherwise>			
+		</choose>
+	</select>
+	
+	<!--환전 List 가져오기 -->
+	<select id="exchangeList" parameterType="com.boot.finalpro.admin.util.SearchUtill_ExchangeDto" resultType="com.boot.finalpro.mypage.model.ExchangeDTO">
+		SELECT SEQ,ID,BANK,BANK_NUMBER,EXCHANGE_MONEY,EXDATE,EX_CHECK,SDATE
+		FROM(
+		<choose>
+			<when test="sort == 'low_price'">	<!-- 낮은가격순 -->
+				SELECT ROW_NUMBER()OVER(ORDER BY e.EXCHANGE_MONEY) AS RNUM,e.SEQ,e.ID,e.BANK,e.BANK_NUMBER,e.EXCHANGE_MONEY,e.EXDATE,e.EX_CHECK,s.SDATE
+				FROM EXCHANGE e, SPEND s
+				<choose>
+					<when test="ex_check == 1"> <!--환전 한 얘들 카운트  -->
+						<choose>
+							<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 신청자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 은행명 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 계좌번호 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 
+							</when>
+							<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 			
+							</when>
+							<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>			
+							</when>
+							<otherwise>	<!-- 날짜 선택 없을경우 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>					
+							</otherwise>
+						</choose>			
+					</when>
+					
+					<when test="ex_check == 0"><!--환전 안한 얘들 카운트  -->
+						<choose>
+							<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 신청자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 은행명 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 계좌번호 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 
+							</when>
+							<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 			
+							</when>
+							<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>			
+							</when>
+							<otherwise>	<!-- 날짜 선택 없을경우 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>					
+							</otherwise>
+						</choose>			
+					</when>
+					
+					<otherwise>	<!-- 모든경우 카운트 -->
+						<choose>
+							<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 신청자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE BETWEEN #{begin} AND #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 은행명 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 계좌번호 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE BETWEEN #{begin} AND #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 
+							</when>
+							<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[>=]]> #{begin})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[>=]]> #{begin})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 			
+							</when>
+							<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[<=]]> #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[<=]]> #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>			
+							</when>
+							<otherwise>	<!-- 날짜 선택 없을경우 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%')
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%')
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>					
+							</otherwise>
+						</choose>			
+					</otherwise>																			
+				</choose>			
+			</when>
+			
+			
+			<when test="sort=='high_price'">	<!-- 높은 가격순 -->
+				SELECT ROW_NUMBER()OVER(ORDER BY e.EXCHANGE_MONEY DESC) AS RNUM,e.SEQ,e.ID,e.BANK,e.BANK_NUMBER,e.EXCHANGE_MONEY,e.EXDATE,e.EX_CHECK,s.SDATE
+				FROM EXCHANGE e, SPEND s
+				<choose>
+					<when test="ex_check ==1"> <!--환전 한 얘들 카운트  -->
+						<choose>
+							<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 신청자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 은행명 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 계좌번호 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 
+							</when>
+							<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 			
+							</when>
+							<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>			
+							</when>
+							<otherwise>	<!-- 날짜 선택 없을경우 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>					
+							</otherwise>
+						</choose>			
+					</when>				
+				
+					<when test="ex_check == 0"> <!--환전 한 얘들 카운트  -->
+						<choose>
+							<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 신청자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 은행명 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 계좌번호 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 
+							</when>
+							<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 			
+							</when>
+							<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>			
+							</when>
+							<otherwise>	<!-- 날짜 선택 없을경우 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>					
+							</otherwise>
+						</choose>			
+					</when>
+					<otherwise>	<!-- 모든경우 카운트 -->
+						<choose>
+							<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 신청자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE BETWEEN #{begin} AND #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 은행명 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 계좌번호 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE BETWEEN #{begin} AND #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 
+							</when>
+							<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[>=]]> #{begin})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[>=]]> #{begin})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 			
+							</when>
+							<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[<=]]> #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[<=]]> #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>			
+							</when>
+							<otherwise>	<!-- 날짜 선택 없을경우 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%')
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%')
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>					
+							</otherwise>
+						</choose>			
+					</otherwise>
+				</choose>	
+			 </when>
+			 
+			 
+			<otherwise>	<!-- 가격 상관없이 -->
+				SELECT ROW_NUMBER()OVER(ORDER BY e.SEQ DESC) AS RNUM,e.SEQ,e.ID,e.BANK,e.BANK_NUMBER,e.EXCHANGE_MONEY,e.EXDATE,e.EX_CHECK,s.SDATE
+				FROM EXCHANGE e, SPEND s
+				<choose>
+					<when test="ex_check == 1"> <!--환전 한 얘들 카운트  -->
+						<choose>
+							<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 신청자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 은행명 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 계좌번호 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 
+							</when>
+							<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 			
+							</when>
+							<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>			
+							</when>
+							<otherwise>	<!-- 날짜 선택 없을경우 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EX_CHECK=1)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>					
+							</otherwise>
+						</choose>			
+					</when>
+					
+					<when test="ex_check == 0"><!--환전 안한 얘들 카운트  -->
+						<choose>
+							<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 신청자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 은행명 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 계좌번호 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE BETWEEN #{begin} AND #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 
+							</when>
+							<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[>=]]> #{begin} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 			
+							</when>
+							<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[<=]]> #{end} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>			
+							</when>
+							<otherwise>	<!-- 날짜 선택 없을경우 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EX_CHECK=0)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>					
+							</otherwise>
+						</choose>			
+					</when>
+					
+					<otherwise>	<!-- 모든경우 카운트 -->
+						<choose>
+							<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 신청자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE BETWEEN #{begin} AND #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 은행명 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 계좌번호 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE BETWEEN #{begin} AND #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE BETWEEN #{begin} AND #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 
+							</when>
+							<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[>=]]> #{begin})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[>=]]> #{begin})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[>=]]> #{begin})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose> 			
+							</when>
+							<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText} AND e.EXDATE <![CDATA[<=]]> #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%' AND e.EXDATE <![CDATA[<=]]> #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID AND e.EXDATE <![CDATA[<=]]> #{end})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>			
+							</when>
+							<otherwise>	<!-- 날짜 선택 없을경우 -->
+								<choose>
+									<when test="category == 'ID'">	<!-- 검색어가 작성자 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.ID=#{searchText})
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK'"> <!-- 검색어가 제목 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK LIKE '%'||#{searchText}||'%')
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<when test="category == 'BANK_NUMBER'"> <!-- 검색어가 내용 -->
+										WHERE 1=1 AND e.ID=s.ID AND e.BANK_NUMBER LIKE '%'||#{searchText}||'%')
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</when>
+									<otherwise>	<!-- 검색어가 없을경우  -->
+										WHERE 1=1 AND e.ID=s.ID)
+										WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})
+									</otherwise>
+								</choose>					
+							</otherwise>
+						</choose>			
+					</otherwise>																			
+				</choose>											
+			</otherwise>			
+		</choose>	
+	</select>
+	
+	<!-- 환전 상세보기 -->
+	<select id="exchangeDetail" resultType="com.boot.finalpro.mypage.model.ExchangeDTO" parameterType="java.lang.Integer">
+	SELECT e.SEQ,e.ID,e.BANK,e.BANK_NUMBER,e.EXCHANGE_MONEY,e.EXDATE,e.EX_CHECK,s.SDATE
+	FROM  EXCHANGE e,SPEND s
+	WHERE 1=1 AND e.ID=s.ID AND e.SEQ=#{seq}
+	</select>
+	
+	<!-- 환전 상태 업데이트 -->
+	<update id="exchageUpdate" parameterType="java.lang.Integer">
+	UPDATE EXCHANGE
+	SET EX_CHECK = 1
+	WHERE SEQ=${seq}
+	</update>
+	<update id="spendUpdate" parameterType="java.lang.Integer">
+	UPDATE SPEND
+	SET SDATE = SYSDATE
+	WHERE SEQ=${seq}
+	</update>
+		<!-- 경기 일정 count 가져오기 -->
+	<select id="gameListCount" parameterType="com.boot.finalpro.admin.util.SearchUtillDto" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM GAME
+		<choose>
+			<when test="g_result == 1">	<!-- 경기 전 목록 -->
+				<choose>
+				<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+					<choose>
+						<when test="category == 'CATEGORY'">	<!-- 검색어가 작성자 -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND CATEGORY=#{searchText} AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL 
+						</when>
+						<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<otherwise>	<!-- 검색어가 없을경우  -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</otherwise>
+					</choose> 
+				</when>
+				<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+					<choose>
+						<when test="category == 'CATEGORY'">	<!-- 검색어가 작성자 -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND CATEGORY=#{searchText} AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>						
+						<otherwise>	<!-- 검색어가 없을경우  -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</otherwise>
+					</choose> 			
+				</when>
+				<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+					<choose>
+						<when test="category == 'CATEGORY'">	<!-- 검색어가 작성자 -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND CATEGORY=#{searchText} AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>							
+						<otherwise>	<!-- 검색어가 없을경우  -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</otherwise>
+					</choose>			
+				</when>
+				<otherwise>	<!-- 날짜 선택 없을경우 -->
+					<choose>
+						<when test="category == 'CATEGORY'">	<!-- 검색어가 작성자 -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND CATEGORY=#{searchText} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND TITLE LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND CONTENT LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>						
+						<otherwise>	<!-- 검색어가 없을경우  -->
+							WHERE 1=1 AND GAME_RESULT IS NULL AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</otherwise>
+					</choose>					
+				</otherwise>
+			</choose>			
+			</when>
+			
+			<when test="g_result == 2"> <!-- 경기를 치른 목록 -->
+			<choose>
+				<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+					<choose>
+						<when test="category == 'CATEGORY'">	<!-- 검색어가 작성자 -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND CATEGORY=#{searchText} AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>						
+						<otherwise>	<!-- 검색어가 없을경우  -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</otherwise>
+					</choose> 
+				</when>
+				<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+					<choose>
+						<when test="category == 'CATEGORY'">	<!-- 검색어가 작성자 -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND CATEGORY=#{searchText} AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>										
+						<otherwise>	<!-- 검색어가 없을경우  -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</otherwise>
+					</choose> 			
+				</when>
+				<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+					<choose>
+						<when test="category == 'CATEGORY'">	<!-- 검색어가 작성자 -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND CATEGORY=#{searchText} AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>									
+						<otherwise>	<!-- 검색어가 없을경우  -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</otherwise>
+					</choose>			
+				</when>
+				<otherwise>	<!-- 날짜 선택 없을경우 -->
+					<choose>
+						<when test="category == 'CATEGORY'">	<!-- 검색어가 작성자 -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND CATEGORY=#{searchText} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND TITLE LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND CONTENT LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>								
+						<otherwise>	<!-- 검색어가 없을경우  -->
+							WHERE 1=1 AND GAME_RESULT IS NOT NULL AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</otherwise>
+					</choose>					
+				</otherwise>
+			</choose>
+			</when>
+			
+			<otherwise>						<!-- 모든 목록 -->
+			<choose>
+				<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+					<choose>
+						<when test="category == 'CATEGORY'">	<!-- 검색어가 작성자 -->
+							WHERE 1=1 AND CATEGORY=#{searchText} AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+							WHERE 1=1 AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>						
+						<otherwise>	<!-- 검색어가 없을경우  -->
+							WHERE 1=1 AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</otherwise>
+					</choose> 
+				</when>
+				<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+					<choose>
+						<when test="category == 'CATEGORY'">	<!-- 검색어가 작성자 -->
+							WHERE 1=1 AND CATEGORY=#{searchText} AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+							WHERE 1=1 AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>							
+						<otherwise>	<!-- 검색어가 없을경우  -->
+							WHERE 1=1 AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</otherwise>
+					</choose> 			
+				</when>
+				<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+					<choose>
+						<when test="category == 'CATEGORY'">	<!-- 검색어가 작성자 -->
+							WHERE 1=1 AND CATEGORY=#{searchText} AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+							WHERE 1=1 AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>								
+						<otherwise>	<!-- 검색어가 없을경우  -->
+							WHERE 1=1 AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</otherwise>
+					</choose>			
+				</when>
+				<otherwise>	<!-- 날짜 선택 없을경우 -->
+					<choose>
+						<when test="category == 'CATEGORY'">	<!-- 검색어가 작성자 -->
+							WHERE 1=1 AND CATEGORY=#{searchText} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+							WHERE 1=1 AND TITLE LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND CONTENT LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>
+						<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 내용 -->
+							WHERE 1=1 AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</when>								
+						<otherwise>	<!-- 검색어가 없을경우  -->
+							WHERE 1=1 AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+						</otherwise>
+					</choose>					
+				</otherwise>
+			</choose>			
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+	<!-- gameList 가져오기 -->
+	<select id="gameList" parameterType="com.boot.finalpro.admin.util.SearchUtillDto" resultType="com.boot.finalpro.game.model.GameDTO">
+		SELECT SEQ_GAME,CATEGORY,NAME_TEAM1,NAME_TEAM2,GDATE,NAME_STADIUM,TITLE,CONTENT,DEL,PAYOUT_R1,PAYOUT_R2,SCORE1,SCORE2,GAME_RESULT,LEAGUE,READ_COUNT,WDATE
+		FROM (SELECT ROW_NUMBER()OVER(ORDER BY GDATE DESC)AS RNUM,SEQ_GAME,CATEGORY,NAME_TEAM1,NAME_TEAM2,GDATE,NAME_STADIUM,TITLE,CONTENT,DEL,PAYOUT_R1,PAYOUT_R2,SCORE1,SCORE2,GAME_RESULT,LEAGUE,READ_COUNT,WDATE FROM GAME
+		<choose>
+			<when test="g_result == 1"> <!--경기 시작전-->
+				<choose>
+					<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+						<choose>
+							<when test="category == 'CATEGORY'">	<!-- 검색어가 종목 -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND CATEGORY=#{searchText} AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 경기장 -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})							
+							</when>
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</otherwise>
+						</choose> 
+					</when>
+					<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+						<choose>
+							<when test="category == 'CATEGORY'">	<!-- 검색어가 종목 -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND CATEGORY=#{searchText} AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 경기장 -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})							
+							</when>							
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</otherwise>
+						</choose> 			
+					</when>
+					<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+						<choose>
+							<when test="category == 'CATEGORY'">	<!-- 검색어가 종목 -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND CATEGORY=#{searchText} AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 경기장 -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})							
+							</when>							
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</otherwise>
+						</choose>			
+					</when>
+					<otherwise>	<!-- 날짜 선택 없을경우 -->
+						<choose>
+							<when test="category == 'CATEGORY'">	<!-- 검색어가 종목 -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND CATEGORY=#{searchText} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND TITLE LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND CONTENT LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 경기장 -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})							
+							</when>							
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND GAME_RESULT IS NULL AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</otherwise>
+						</choose>					
+					</otherwise>
+				</choose>			
+			</when>
+			
+			<when test="g_result == 2"> <!--경기 끝난후-->
+				<choose>
+					<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+						<choose>
+							<when test="category == 'CATEGORY'">	<!-- 검색어가 종목 -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND CATEGORY=#{searchText} AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 경기장 -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})							
+							</when>
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</otherwise>
+						</choose> 
+					</when>
+					<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+						<choose>
+							<when test="category == 'CATEGORY'">	<!-- 검색어가 종목 -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND CATEGORY=#{searchText} AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 경기장 -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})							
+							</when>							
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</otherwise>
+						</choose> 			
+					</when>
+					<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+						<choose>
+							<when test="category == 'CATEGORY'">	<!-- 검색어가 종목 -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND CATEGORY=#{searchText} AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 경기장 -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})							
+							</when>							
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</otherwise>
+						</choose>			
+					</when>
+					<otherwise>	<!-- 날짜 선택 없을경우 -->
+						<choose>
+							<when test="category == 'CATEGORY'">	<!-- 검색어가 종목 -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND CATEGORY=#{searchText} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND TITLE LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND CONTENT LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 경기장 -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})							
+							</when>							
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND GAME_RESULT IS NOT NULL AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</otherwise>
+						</choose>					
+					</otherwise>
+				</choose>				
+			</when>
+
+			
+			<otherwise> <!-- 경기 끝난유무 상관없이 모든 리스트 -->
+				<choose>
+					<when test="begin != null and end != null"> <!-- 시작날짜,끝날짜 둘다 선택 -->
+						<choose>
+							<when test="category == 'CATEGORY'">	<!-- 검색어가 종목 -->
+								WHERE 1=1 AND CATEGORY=#{searchText} AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 경기장 -->
+								WHERE 1=1 AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})							
+							</when>
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND GDATE BETWEEN #{begin} AND #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</otherwise>
+						</choose> 
+					</when>
+					<when test="begin != null and end == null">	<!--  시작날짜만 선택 -->
+						<choose>
+							<when test="category == 'CATEGORY'">	<!-- 검색어가 종목 -->
+								WHERE 1=1 AND CATEGORY=#{searchText} AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 경기장 -->
+								WHERE 1=1 AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})							
+							</when>							
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND GDATE <![CDATA[>=]]> #{begin} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</otherwise>
+						</choose> 			
+					</when>
+					<when test="begin == null and end != null">	<!-- 끝날짜만 선택 -->
+						<choose>
+							<when test="category == 'CATEGORY'">	<!-- 검색어가 종목 -->
+								WHERE 1=1 AND CATEGORY=#{searchText} AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND TITLE LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND CONTENT LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 경기장 -->
+								WHERE 1=1 AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})							
+							</when>							
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND GDATE <![CDATA[<=]]> #{end} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</otherwise>
+						</choose>			
+					</when>
+					<otherwise>	<!-- 날짜 선택 없을경우 -->
+						<choose>
+							<when test="category == 'CATEGORY'">	<!-- 검색어가 종목 -->
+								WHERE 1=1 AND CATEGORY=#{searchText} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'TITLE'"> <!-- 검색어가 제목 -->
+								WHERE 1=1 AND TITLE LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'CONTENT'"> <!-- 검색어가 내용 -->
+								WHERE 1=1 AND CONTENT LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</when>
+							<when test="category == 'NAME_STADIUM'"> <!-- 검색어가 경기장 -->
+								WHERE 1=1 AND NAME_STADIUM LIKE '%'||#{searchText}||'%' AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1})							
+							</when>							
+							<otherwise>	<!-- 검색어가 없을경우  -->
+								WHERE 1=1 AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+								ORDER BY GDATE DESC)
+								WHERE RNUM<![CDATA[>=]]>(1+10*${page-1}) AND RNUM<![CDATA[<=]]>(10+10*${page-1}) 
+							</otherwise>
+						</choose>					
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="gameDetail" parameterType="java.lang.Integer" resultType="com.boot.finalpro.game.model.GameDTO"> <!-- 경기 일정 디테일 -->
+		SELECT *
+		FROM GAME
+		WHERE SEQ_GAME = ${game_seq}
+	</select>
+	
+	
+	<!-- 월별 소득,지출 통계 구하기 -->
+	<select id="monthlyDayProfit" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT NVL(SUM(PROFIT_MONEY),0)
+		FROM PROFIT
+		WHERE SUBSTR(PDATE,4,10) = #{md}
+	</select>
+	<select id="monthlyDaySpend" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT NVL(SUM(SPEND_MONEY),0)
+		FROM SPEND
+		WHERE SUBSTR(SDATE,4,10) = #{md}
+	</select>
+	
+	<!-- 월별 선호 종목 통계 구하기 -->
+	<select id="monthlyFavoriteSports" parameterType="com.boot.finalpro.game.model.GameDTO" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*),0)
+		FROM GAME
+		WHERE 1=1 AND SUBSTR(GDATE,1,7) = #{gdate} AND CATEGORY = #{category} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+	</select>
+	
+	<!-- admin Main 종합랭킹 1위 -->
+	<select id="mainRankFirst" resultType="com.boot.finalpro.teambbs.model.TeamDetailDTO">
+		SELECT *
+		FROM TEAM_DETAIL
+		WHERE (SOCCER_MMR+BASKETBALL_MMR+BASEBALL_MMR+BADMINTON_MMR+PINGPONG_MMR) = (SELECT MAX(SOCCER_MMR+BASKETBALL_MMR+BASEBALL_MMR+BADMINTON_MMR+PINGPONG_MMR) FROM TEAM_DETAIL)
+	</select>
+	<!-- admin Main 종합랭킹 꼴등 -->
+	<select id="mainRankLast" resultType="com.boot.finalpro.teambbs.model.TeamDetailDTO">
+		SELECT *
+		FROM TEAM_DETAIL
+		WHERE (SOCCER_MMR+BASKETBALL_MMR+BASEBALL_MMR+BADMINTON_MMR+PINGPONG_MMR) = (SELECT MIN(SOCCER_MMR+BASKETBALL_MMR+BASEBALL_MMR+BADMINTON_MMR+PINGPONG_MMR) FROM TEAM_DETAIL)
+	</select>
+	
+	<!-- admin 종목별 최고점,최저점,평균점 구하기(통계용) -->
+	<select id="sportsScore" parameterType="java.lang.String" resultType="com.boot.finalpro.admin.util.SportsScoreDto">
+	SELECT NVL(MAX(#{category}),0)AS MAX,NVL(MIN(#{category}),0)AS MIN,NVL(AVG(#{category}),0)AS AVG
+	FROM TEAM_DETAIL
+	</select>
+	
+	<!-- admin 월별 경기장 이용 수 -->
+	<select id="monthlyStadiumCount" parameterType="com.boot.finalpro.admin.util.LocationStadiumDto" resultType="com.boot.finalpro.game.model.GameDTO">
+		SELECT SUBSTR(NAME_STADIUM,1,2)NAME_STADIUM,NVL(COUNT(SUBSTR(NAME_STADIUM,1,2)),0)AS READ_COUNT
+		FROM GAME
+		WHERE SUBSTR(GDATE,1,7) = #{month} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+		GROUP BY SUBSTR(NAME_STADIUM,1,2)
+		ORDER BY READ_COUNT DESC
+	</select>
+	
+	<!-- admin 지역별 경기장 이용 통계 -->
+	<select id="locationStadiumCount" parameterType="com.boot.finalpro.admin.util.LocationStadiumDto" resultType="com.boot.finalpro.game.model.GameDTO">
+		SELECT CATEGORY,NVL(COUNT(CATEGORY),0) AS READ_COUNT
+		FROM GAME
+		WHERE 1=1 AND SUBSTR(NAME_STADIUM,1,2) = #{location} AND SUBSTR(GDATE,1,7) = #{month} AND NAME_TEAM1 IS NOT NULL AND NAME_TEAM2 IS NOT NULL
+		GROUP BY CATEGORY
+		ORDER BY READ_COUNT	DESC
+	</select>			
+</mapper>

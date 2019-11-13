@@ -1,0 +1,58 @@
+#_frmFormSearch {
+	margin: auto;	
+}
+.page-div {
+	margin: auto;
+}
+
+.table {
+	width: 85%;
+	margin: auto;
+}
+.table td, th{
+	vertical-align: middle !important;
+	text-align: center;
+}
+.table tr {
+	height: 35px;
+}
+.form-control {
+	width: 40%;
+	margin: auto;
+}
+#bankNumber {
+	width: 40%;	
+}
+
+.search-table {
+	width: 33%;
+	margin: auto;
+}
+
+.form-control {
+	width: 90%;
+	margin: auto;
+}
+
+#_s_keyword {
+	width: 90%;
+}
+
+#_btnSearch {
+	width: 90%;
+}
+#li-msg {
+	background-color: #dadada;
+}
+#msg-li {
+	width: 80%;
+	margin: auto;
+}
+#receiveMsg {
+	width: 100%;
+	cursor: pointer;
+}
+#sendMsg {
+	width: 100%;
+	background-color: #e7e7e7;
+}

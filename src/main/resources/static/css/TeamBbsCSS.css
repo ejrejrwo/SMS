@@ -1,0 +1,128 @@
+@charset "UTF-8";
+
+.content-area {
+    padding: 20px 0 20px 20px;
+    height: 100%;
+}
+
+.top-category {
+	padding: 0 15px;
+    border-bottom: 1px solid #dddddd;
+    font-family: 'Musinsa', "gulim", "굴림",sans-serif;
+    line-height: 49px;
+    text-align: left;
+}
+
+.mainBbsList {
+	/* border: 1px solid; */
+}
+
+.BbsListTable {
+	width: 100%;
+	margin: 0 10px 0 0;
+}
+
+.Bbspaging { width:98%; border:0; margin-left:auto; margin-right:auto; margin-top:10px; }
+.serach-category { width:98%; background-color:#FFFFFF; text-align:right; padding:2px; margin-top:5px; margin-bottom:10px; margin-left:auto; margin-right:auto;}
+
+.detail-content {
+	height : 95%;
+}
+
+.detail-top {
+	display: block;
+    border-bottom: 1px solid #ddd;
+    padding: 20px 17px;
+    height: 20px;
+    
+}
+
+.detail-middle {
+	display: block;
+    border-bottom: 1px solid #ddd;
+    padding: 20px 17px;
+    height: 20px;
+    color: #b2b2b2;
+}
+
+.detail-content{
+	position: relative;
+}
+
+.detail-main{
+	padding: 10px 20px 20px 20px;
+    line-height: 20px;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+}
+
+.detail-like{
+	
+}
+
+.detail-bottom {
+	padding: 10px 10px 0 10px;
+    height: 30px;
+    position: relative;
+	font-size: 15px;
+}
+
+button {
+	cursor: pointer;
+}
+
+.detail-border {
+	border: 1px solid #ddd;
+    position: relative;
+}
+
+.detail-comment{
+	padding-bottom: 30px;
+}
+
+.detail-comment-count {
+    float: left;
+    width : 95%;
+    font-size: 14px;
+    line-height: 21px;
+    margin-top : 5px;
+    margin-bottom: 14.5px;
+    display: inline-block;
+    vertical-align: top;
+    font-family: auto;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    padding: 15px 10px;
+}
+
+.detail-comment-submit {
+	height: 150px;
+	width : 95%;
+    overflow: hidden;
+    padding: 5px 10px;
+    position: relative;
+    border: 1px solid #e5e5e5;
+    cursor: pointer;
+}
+
+.comment-submit-hide {
+    width: 100%;
+    height: 120px;
+    border: 0;
+    background: #fff;
+    padding: 0;
+    vertical-align: top;
+}
+
+#dropdown:hover #dropdown-menu {
+    display: block;
+    margin-top: 0;
+}
+
+#_s_category { -webkit-appearance: none; /* 네이티브 외형 감추기 */ -moz-appearance: none; appearance: none; background: url(이미지 경로) no-repeat 95% 50%; /* 화살표 모양의 이미지 */ } /* IE 10, 11의 네이티브 화살표 숨기기 */ 
+select::-ms-expand { display: none; }
+#_s_category { width: 100px; /* 원하는 너비설정 */ padding: .4em .3em; /* 여백으로 높이 설정 */ font-family: inherit; /* 폰트 상속 */ background: url(https://farm1.staticflickr.com/379/19928272501_4ef877c265_t.jpg) no-repeat 95% 50%; /* 네이티브 화살표 대체 */ border: 1px solid #999; border-radius: 0px; /* iOS 둥근모서리 제거 */ -webkit-appearance: none; /* 네이티브 외형 감추기 */ -moz-appearance: none; appearance: none; }
+
+
+

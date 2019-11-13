@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- <mapper namespace="com.mde.app.common.dao"> -->
+<mapper namespace="Betting">
+
+<!-- Query -->
+<select id="getBettingList" parameterType="com.boot.finalpro.game.model.GameParams"
+	resultType="com.boot.finalpro.game.model.GameDTO">
+	SELECT SEQ_GAME, CATEGORY, NAME_TEAM1, NAME_TEAM2, GDATE, NAME_STADIUM, TITLE, CONTENT, DEL,
+		   PAYOUT_R1, PAYOUT_R2, SCORE1, SCORE2, GAME_RESULT, LEAGUE, READ_COUNT, WDATE
+	FROM(SELECT ROW_NUMBER()OVER(
+		<choose>
+			<when test="sorting == 1">ORDER BY GDATE DESC, SEQ_GAME DESC)</when>
+			<when test="sorting == 2">ORDER BY GDATE ASC, SEQ_GAME ASC)</when>
+			<otherwise>ORDER BY SEQ_GAME DESC)</otherwise>
+		</choose> AS RNUM,
+				SEQ_GAME, CATEGORY, NAME_TEAM1, NAME_TEAM2, GDATE, NAME_STADIUM, TITLE, CONTENT, DEL,
+				PAYOUT_R1, PAYOUT_R2, SCORE1, SCORE2, GAME_RESULT, LEAGUE, READ_COUNT, WDATE
+		 FROM GAME
+		 WHERE DEL=0
+		 	AND (NAME_TEAM2 IS NOT NULL)
+		 	AND (TRUNC(SYSDATE, 'MI')-TO_DATE(CONCAT(SUBSTR(GDATE, 0, 11), SUBSTR(GDATE, 14, 18)),'YYYY-MM-DD HH24:MI')) <![CDATA[ < ]]> 0
+		 <if test="sorting == 3">AND (LEAGUE IS NOT NULL)</if>
+		 <if test="choice != null and choice != ''
+		 		   and keyword != null and keyword != ''" >
+			 <if test="choice == 'category'">
+				 AND CATEGORY LIKE '%'||#{keyword}||'%'
+			 </if>
+			 <if test="choice == 'stadium'">
+				 AND NAME_STADIUM LIKE '%'||#{keyword}||'%'
+			 </if>
+			 <if test="choice == 'team_name'">
+				 AND (NAME_TEAM1 LIKE '%'||#{keyword}||'%' OR NAME_TEAM2 LIKE '%'||#{keyword}||'%')
+			 </if>
+		 </if>
+		 <choose>
+			<when test="sorting == 1">ORDER BY GDATE DESC, SEQ_GAME DESC)</when>
+			<when test="sorting == 2">ORDER BY GDATE ASC, SEQ_GAME ASC)</when>
+			<otherwise>ORDER BY SEQ_GAME DESC)</otherwise>
+		 </choose>
+		 WHERE RNUM <![CDATA[ >= ]]> (#{pageNum} * 10 - 9) AND RNUM <![CDATA[ <= ]]> (#{pageNum} * 10)
+</select>
+
+<select id="getBettingCount" parameterType="com.boot.finalpro.game.model.GameParams"
+	resultType="java.lang.Integer">
+	SELECT NVL(COUNT(*), 0) AS CNT
+	FROM GAME
+	WHERE DEL=0
+		AND (NAME_TEAM2 IS NOT NULL)
+		AND (TRUNC(SYSDATE, 'MI')-TO_DATE(CONCAT(SUBSTR(GDATE, 0, 11), SUBSTR(GDATE, 14, 18)),'YYYY-MM-DD HH24:MI')) <![CDATA[ < ]]> 0
+	<if test="sorting == 3">AND (LEAGUE IS NOT NULL)</if>
+	<if test="choice != null and choice != ''
+		 	  and keyword != null and keyword != ''" >
+		<if test="choice == 'category'">
+			AND CATEGORY LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="choice == 'stadium'">
+			AND NAME_STADIUM LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="choice == 'team_name'">
+			AND (NAME_TEAM1 LIKE '%'||#{keyword}||'%' OR NAME_TEAM2 LIKE '%'||#{keyword}||'%')
+		</if>
+	</if>
+</select>
+
+<!-- 베팅을 했는지 확인 -->
+<select id="isBet" parameterType="com.boot.finalpro.betting.model.BettingDTO"
+	resultType="java.lang.Integer">
+	SELECT NVL(COUNT(*), 0)
+	FROM BETTING
+	WHERE SEQ_GAME=#{seq_game} AND ID=#{id}
+</select>
+
+<select id="getBetting" parameterType="com.boot.finalpro.game.model.GameDTO"
+	resultType="com.boot.finalpro.game.model.GameDTO">
+	SELECT SEQ_GAME, CATEGORY, NAME_TEAM1, NAME_TEAM2, GDATE, NAME_STADIUM, TITLE, CONTENT, DEL,
+		   PAYOUT_R1, PAYOUT_R2, SCORE1, SCORE2, GAME_RESULT, LEAGUE, READ_COUNT, WDATE
+	FROM GAME
+	WHERE SEQ_GAME=#{seq_game}
+</select>
+
+<select id="getMMR1" parameterType="com.boot.finalpro.game.model.GameDTO"
+	resultType="java.lang.Integer">
+	SELECT <if test="category == '축구'">SOCCER_MMR</if>
+		   <if test="category == '농구'">BASKETBALL_MMR</if>
+		   <if test="category == '야구'">BASEBALL_MMR</if>
+		   <if test="category == '배드민턴'">BADMINTON_MMR</if>
+		   <if test="category == '탁구'">PINGPONG_MMR</if>
+	FROM TEAM_DETAIL
+	WHERE TEAM_NAME=#{name_team1}
+</select>
+
+<select id="getMMR2" parameterType="com.boot.finalpro.game.model.GameDTO"
+	resultType="java.lang.Integer">
+	SELECT <if test="category == '축구'">SOCCER_MMR</if>
+		   <if test="category == '농구'">BASKETBALL_MMR</if>
+		   <if test="category == '야구'">BASEBALL_MMR</if>
+		   <if test="category == '배드민턴'">BADMINTON_MMR</if>
+		   <if test="category == '탁구'">PINGPONG_MMR</if>
+	FROM TEAM_DETAIL
+	WHERE TEAM_NAME=#{name_team2}
+</select>
+
+<select id="getTeamFile1" parameterType="com.boot.finalpro.game.model.GameDTO"
+	resultType="java.lang.String">
+	SELECT FILE_NAME
+	FROM TEAM_DETAIL
+	WHERE TEAM_NAME=#{name_team1}
+</select>
+
+<select id="getTeamFile2" parameterType="com.boot.finalpro.game.model.GameDTO"
+	resultType="java.lang.String">
+	SELECT FILE_NAME
+	FROM TEAM_DETAIL
+	WHERE TEAM_NAME=#{name_team2}
+</select>
+
+<select id="getBettingMoney1" parameterType="com.boot.finalpro.game.model.GameDTO"
+	resultType="java.lang.Integer">
+	SELECT NVL(SUM(BETTING_MONEY), 0)
+	FROM BETTING
+	WHERE SEQ_GAME=#{seq_game} AND TEAM_NAME=#{name_team1}
+</select>
+
+<select id="getBettingMoney2" parameterType="com.boot.finalpro.game.model.GameDTO"
+	resultType="java.lang.Integer">
+	SELECT NVL(SUM(BETTING_MONEY), 0)
+	FROM BETTING
+	WHERE SEQ_GAME=#{seq_game} AND TEAM_NAME=#{name_team2}
+</select>
+
+<select id="getMoney" parameterType="java.lang.String"
+	resultType="java.lang.Integer">
+	SELECT NVL(NOW_MONEY, 0)
+	FROM MEMBER
+	WHERE ID=#{id}
+</select>
+
+<select id="betTeamCheck" parameterType="com.boot.finalpro.game.model.GameDTO"
+	resultType="java.lang.Integer">
+	SELECT NVL(COUNT(*), 0)
+	FROM MEMBER
+	WHERE ID=#{id} AND (TEAM_NAME=#{name_team1} OR TEAM_NAME=#{name_team2})
+</select>
+
+
+<insert id="betting" parameterType="com.boot.finalpro.betting.model.BettingDTO">
+	INSERT INTO BETTING
+	VALUES(BET_SEQ.NEXTVAL, #{seq_game}, #{id}, #{team_name}, #{betting_money}, SYSDATE)
+</insert>
+
+<update id="subtractMoney" parameterType="com.boot.finalpro.betting.model.BettingDTO">
+	UPDATE MEMBER
+	SET NOW_MONEY = NOW_MONEY-#{betting_money}
+	WHERE ID=#{id}
+</update>
+
+<select id="getPassword" parameterType="java.lang.String"
+	resultType="java.lang.String">
+	SELECT PW
+	FROM SMS_MEM
+	WHERE ID=#{id}
+</select>
+
+<select id="getGameResultList" parameterType="com.boot.finalpro.game.model.GameParams"
+	resultType="com.boot.finalpro.game.model.GameDTO">
+	SELECT SEQ_GAME, CATEGORY, NAME_TEAM1, NAME_TEAM2, GDATE, NAME_STADIUM, TITLE, CONTENT, DEL,
+		   PAYOUT_R1, PAYOUT_R2, SCORE1, SCORE2, GAME_RESULT, LEAGUE, READ_COUNT, WDATE
+	FROM(SELECT ROW_NUMBER()OVER(
+			<choose>
+				<when test="sorting == 1">ORDER BY GDATE DESC, SEQ_GAME DESC)</when>
+				<when test="sorting == 2">ORDER BY GDATE ASC, SEQ_GAME ASC)</when>
+				<otherwise>ORDER BY SEQ_GAME DESC)</otherwise>
+			</choose> AS RNUM,
+				SEQ_GAME, CATEGORY, NAME_TEAM1, NAME_TEAM2, GDATE, NAME_STADIUM, TITLE, CONTENT, DEL,
+				PAYOUT_R1, PAYOUT_R2, SCORE1, SCORE2, GAME_RESULT, LEAGUE, READ_COUNT, WDATE
+		 FROM GAME
+		 WHERE DEL=0
+		 	AND (NAME_TEAM2 IS NOT NULL)
+		 	AND (TRUNC(SYSDATE, 'MI')-TO_DATE(CONCAT(SUBSTR(GDATE, 0, 11), SUBSTR(GDATE, 14, 18)),'YYYY-MM-DD HH24:MI')) <![CDATA[ >= ]]> 0
+		 	AND (GAME_RESULT IS NOT NULL)
+		 <if test="sorting == 3">AND (LEAGUE IS NOT NULL)</if>
+		 <if test="choice != null and choice != ''
+		 		   and keyword != null and keyword != ''" >
+			 <if test="choice == 'category'">
+				 AND CATEGORY LIKE '%'||#{keyword}||'%'
+			 </if>
+			 <if test="choice == 'team_name'">
+				 AND (NAME_TEAM1 LIKE '%'||#{keyword}||'%' OR NAME_TEAM2 LIKE '%'||#{keyword}||'%')
+			 </if>
+		 </if>
+		 <choose>
+			<when test="sorting == 1">ORDER BY GDATE DESC, SEQ_GAME DESC)</when>
+			<when test="sorting == 2">ORDER BY GDATE ASC, SEQ_GAME ASC)</when>
+			<otherwise>ORDER BY SEQ_GAME DESC)</otherwise>
+		 </choose>
+<![CDATA[ WHERE RNUM >= (#{pageNum} * 10 - 9) AND RNUM <= (#{pageNum} * 10) ]]>
+</select>
+
+<select id="getGameResultCount" parameterType="com.boot.finalpro.game.model.GameParams"
+	resultType="java.lang.Integer">
+	SELECT NVL(COUNT(*), 0) AS CNT
+	FROM GAME
+	WHERE DEL=0
+		AND (NAME_TEAM2 IS NOT NULL)
+		AND (TRUNC(SYSDATE, 'MI')-TO_DATE(CONCAT(SUBSTR(GDATE, 0, 11), SUBSTR(GDATE, 14, 18)),'YYYY-MM-DD HH24:MI')) <![CDATA[ >= ]]> 0
+		AND (GAME_RESULT IS NOT NULL)
+	<if test="sorting == 3">AND (LEAGUE IS NOT NULL)</if>
+	<if test="choice != null and choice != ''
+		 	  and keyword != null and keyword != ''" >
+		<if test="choice == 'category'">
+			AND CATEGORY LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="choice == 'team_name'">
+			AND (NAME_TEAM1 LIKE '%'||#{keyword}||'%' OR NAME_TEAM2 LIKE '%'||#{keyword}||'%')
+		</if>
+	</if>
+</select>
+
+<select id="getResultAdminList" parameterType="com.boot.finalpro.game.model.GameParams"
+	resultType="com.boot.finalpro.game.model.GameDTO">
+	SELECT SEQ_GAME, CATEGORY, NAME_TEAM1, NAME_TEAM2, GDATE, NAME_STADIUM, TITLE, CONTENT, DEL,
+		   PAYOUT_R1, PAYOUT_R2, SCORE1, SCORE2, GAME_RESULT, LEAGUE, READ_COUNT, WDATE
+	FROM(SELECT ROW_NUMBER()OVER(
+			<choose>
+				<when test="sorting == 1">ORDER BY GDATE DESC, SEQ_GAME DESC)</when>
+				<when test="sorting == 2">ORDER BY GDATE ASC, SEQ_GAME ASC)</when>
+				<when test="sorting == 4">ORDER BY GAME_RESULT DESC, SEQ_GAME DESC)</when>
+				<otherwise>ORDER BY SEQ_GAME DESC)</otherwise>
+			</choose> AS RNUM,
+				SEQ_GAME, CATEGORY, NAME_TEAM1, NAME_TEAM2, GDATE, NAME_STADIUM, TITLE, CONTENT, DEL,
+				PAYOUT_R1, PAYOUT_R2, SCORE1, SCORE2, GAME_RESULT, LEAGUE, READ_COUNT, WDATE
+		 FROM GAME
+		 WHERE DEL=0
+		 	AND (NAME_TEAM2 IS NOT NULL)
+		 	AND (TRUNC(SYSDATE, 'MI')-TO_DATE(CONCAT(SUBSTR(GDATE, 0, 11), SUBSTR(GDATE, 14, 18)),'YYYY-MM-DD HH24:MI')) <![CDATA[ >= ]]> 0
+		 <if test="sorting == 3">AND (LEAGUE IS NOT NULL)</if>
+		 <if test="choice != null and choice != ''
+		 		   and keyword != null and keyword != ''" >
+			 <if test="choice == 'category'">
+				 AND CATEGORY LIKE '%'||#{keyword}||'%'
+			 </if>
+			 <if test="choice == 'team_name'">
+				 AND (NAME_TEAM1 LIKE '%'||#{keyword}||'%' OR NAME_TEAM2 LIKE '%'||#{keyword}||'%')
+			 </if>
+		 </if>
+		 <choose>
+			<when test="sorting == 1">ORDER BY GDATE DESC, SEQ_GAME DESC)</when>
+			<when test="sorting == 2">ORDER BY GDATE ASC, SEQ_GAME ASC)</when>
+			<when test="sorting == 4">ORDER BY GAME_RESULT DESC, SEQ_GAME DESC)</when>
+			<otherwise>ORDER BY SEQ_GAME DESC)</otherwise>
+		 </choose>
+<![CDATA[ WHERE RNUM >= (#{pageNum} * 10 - 9) AND RNUM <=(#{pageNum} * 10) ]]>
+</select>
+
+<select id="getResultAdminCount" parameterType="com.boot.finalpro.game.model.GameParams"
+	resultType="java.lang.Integer">
+	SELECT NVL(COUNT(*), 0) AS CNT
+	FROM GAME
+	WHERE DEL=0
+		AND (NAME_TEAM2 IS NOT NULL)
+		AND (TRUNC(SYSDATE, 'MI')-TO_DATE(CONCAT(SUBSTR(GDATE, 0, 11), SUBSTR(GDATE, 14, 18)),'YYYY-MM-DD HH24:MI')) <![CDATA[ >= ]]> 0
+	<if test="sorting == 3">AND (LEAGUE IS NOT NULL)</if>
+	<if test="choice != null and choice != ''
+		 	  and keyword != null and keyword != ''" >
+		<if test="choice == 'category'">
+			AND CATEGORY LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="choice == 'team_name'">
+			AND (NAME_TEAM1 LIKE '%'||#{keyword}||'%' OR NAME_TEAM2 LIKE '%'||#{keyword}||'%')
+		</if>
+	</if>
+</select>
+
+<update id="resultAdmin" parameterType="com.boot.finalpro.game.model.GameDTO">
+	UPDATE GAME
+	SET PAYOUT_R1=#{payout_r1}, PAYOUT_R2=#{payout_r2}, SCORE1=#{score1}, SCORE2=#{score2}, GAME_RESULT=#{game_result}
+	WHERE SEQ_GAME=#{seq_game}
+</update>
+
+<select id="getPayId" parameterType="com.boot.finalpro.game.model.GameDTO"
+	resultType="java.lang.String">
+	SELECT ID
+	FROM BETTING
+	WHERE SEQ_GAME=#{seq_game} AND TEAM_NAME=#{game_result}
+</select>
+
+<update id="payBettingMoney" parameterType="com.boot.finalpro.game.model.GameDTO">
+	UPDATE MEMBER
+	SET NOW_MONEY=NOW_MONEY+(SELECT TRUNC(BETTING_MONEY*<if test="score1 gt score2">#{payout_r1}</if>
+												  		<if test="score1 lt score2">#{payout_r2}</if>
+												  		*0.95, -1)
+							 FROM BETTING
+							 WHERE SEQ_GAME=#{seq_game} AND ID=#{id})
+	WHERE ID=#{id}
+</update>
+
+<update id="payAdminMoney" parameterType="com.boot.finalpro.game.model.GameDTO">
+	UPDATE MEMBER
+	SET NOW_MONEY = NOW_MONEY + (SELECT NVL(SUM(BETTING_MONEY), 0) FROM BETTING WHERE SEQ_GAME=#{seq_game}) 
+							  - (SELECT NVL(SUM(TRUNC(BETTING_MONEY*<if test="score1 gt score2">#{payout_r1}</if>
+												  					<if test="score1 lt score2">#{payout_r2}</if>
+												  				   *0.95, -1)), 0)
+								 FROM BETTING
+								 WHERE SEQ_GAME=#{seq_game} AND TEAM_NAME=#{game_result})
+	WHERE ID='adminid1'
+</update>
+
+<update id="changeMMR1" parameterType="com.boot.finalpro.game.model.GameDTO">
+	UPDATE TEAM_DETAIL
+	SET <if test="category == '축구'">SOCCER_MMR</if>
+		<if test="category == '농구'">BASKETBALL_MMR</if>
+		<if test="category == '야구'">BASEBALL_MMR</if>
+		<if test="category == '배드민턴'">BADMINTON_MMR</if>
+		<if test="category == '탁구'">PINGPONG_MMR</if>
+		=#{mmr1}
+	WHERE TEAM_NAME=#{name_team1}
+</update>
+
+<update id="changeMMR2" parameterType="com.boot.finalpro.game.model.GameDTO">
+	UPDATE TEAM_DETAIL
+	SET <if test="category == '축구'">SOCCER_MMR</if>
+		<if test="category == '농구'">BASKETBALL_MMR</if>
+		<if test="category == '야구'">BASEBALL_MMR</if>
+		<if test="category == '배드민턴'">BADMINTON_MMR</if>
+		<if test="category == '탁구'">PINGPONG_MMR</if>
+		=#{mmr2}
+	WHERE TEAM_NAME=#{name_team2}
+</update>
+
+
+
+<!-- 경기 취소 -->
+<select id="getBetInfo" parameterType="java.lang.Integer"
+	resultType="com.boot.finalpro.betting.model.BettingDTO">
+	SELECT SEQ_GAME, ID, BETTING_MONEY
+	FROM BETTING
+	WHERE SEQ_GAME=#{seq_game}
+</select>
+
+<update id="refundBet" parameterType="com.boot.finalpro.betting.model.BettingDTO">
+	UPDATE MEMBER
+	SET NOW_MONEY = NOW_MONEY + #{betting_money}
+	WHERE ID=#{id}
+</update>
+
+<delete id="deleteBet" parameterType="com.boot.finalpro.betting.model.BettingDTO">
+	DELETE BETTING
+	WHERE SEQ_GAME=#{seq_game}
+</delete>
+
+<select id="getLeader" parameterType="java.lang.String"
+	resultType="java.lang.String">
+	SELECT LEADER AS ID 
+	FROM TEAM_DETAIL 
+	WHERE TEAM_NAME=#{team_name}
+</select>
+
+
+<!-- SOCCER_MMR RANKING -->
+<select id="getSoccerRank" parameterType="com.boot.finalpro.betting.model.MMRRankingDTO"
+	resultType="com.boot.finalpro.betting.model.MMRRankingDTO">
+SELECT RANKING, TEAM_NAME, SOCCER_MMR
+FROM(SELECT ROWNUM AS RNUM, RANKING, TEAM_NAME, SOCCER_MMR
+	 FROM(SELECT RANK()OVER(ORDER BY SOCCER_MMR DESC) AS RANKING, TEAM_NAME, SOCCER_MMR
+		  FROM TEAM_DETAIL
+	 	  ORDER BY SOCCER_MMR DESC, TEAM_NAME ASC)
+	 WHERE 1=1
+	 <if test="keyword != null and keyword != ''" >
+	 	AND TEAM_NAME LIKE '%'||#{keyword}||'%'
+	 </if>)
+<![CDATA[ WHERE (RNUM >= (#{pageNum} * 10 - 9) AND RNUM <= (#{pageNum} * 10)) ]]>
+</select>
+
+<!-- BASKETBALL_MMR RANKING -->
+<select id="getBasketballRank" parameterType="com.boot.finalpro.betting.model.MMRRankingDTO"
+	resultType="com.boot.finalpro.betting.model.MMRRankingDTO">
+SELECT RANKING, TEAM_NAME, BASKETBALL_MMR
+FROM(SELECT ROWNUM AS RNUM, RANKING, TEAM_NAME, BASKETBALL_MMR
+	 FROM(SELECT RANK()OVER(ORDER BY BASKETBALL_MMR DESC) AS RANKING, TEAM_NAME, BASKETBALL_MMR
+		  FROM TEAM_DETAIL
+	 	  ORDER BY BASKETBALL_MMR DESC, TEAM_NAME ASC)
+	 WHERE 1=1
+	 <if test="keyword != null and keyword != ''" >
+	 	AND TEAM_NAME LIKE '%'||#{keyword}||'%'
+	 </if>)
+<![CDATA[ WHERE (RNUM >= (#{pageNum} * 10 - 9) AND RNUM <= (#{pageNum} * 10)) ]]>
+</select>
+
+<!-- BASEBALL_MMR RANKING -->
+<select id="getBaseballRank" parameterType="com.boot.finalpro.betting.model.MMRRankingDTO"
+	resultType="com.boot.finalpro.betting.model.MMRRankingDTO">
+SELECT RANKING, TEAM_NAME, BASEBALL_MMR
+FROM(SELECT ROWNUM AS RNUM, RANKING, TEAM_NAME, BASEBALL_MMR
+	 FROM(SELECT RANK()OVER(ORDER BY BASEBALL_MMR DESC) AS RANKING, TEAM_NAME, BASEBALL_MMR
+		  FROM TEAM_DETAIL
+	 	  ORDER BY BASEBALL_MMR DESC, TEAM_NAME ASC)
+	 WHERE 1=1
+	 <if test="keyword != null and keyword != ''" >
+	 	AND TEAM_NAME LIKE '%'||#{keyword}||'%'
+	 </if>)
+<![CDATA[ WHERE (RNUM >= (#{pageNum} * 10 - 9) AND RNUM <= (#{pageNum} * 10)) ]]>
+</select>
+
+<!-- BADMINTON_MMR RANKING -->
+<select id="getBadmintonRank" parameterType="com.boot.finalpro.betting.model.MMRRankingDTO"
+	resultType="com.boot.finalpro.betting.model.MMRRankingDTO">
+SELECT RANKING, TEAM_NAME, BADMINTON_MMR
+FROM(SELECT ROWNUM AS RNUM, RANKING, TEAM_NAME, BADMINTON_MMR
+	 FROM(SELECT RANK()OVER(ORDER BY BADMINTON_MMR DESC) AS RANKING, TEAM_NAME, BADMINTON_MMR
+		  FROM TEAM_DETAIL
+	 	  ORDER BY BADMINTON_MMR DESC, TEAM_NAME ASC)
+	 WHERE 1=1
+	 <if test="keyword != null and keyword != ''" >
+	 	AND TEAM_NAME LIKE '%'||#{keyword}||'%'
+	 </if>)
+<![CDATA[ WHERE (RNUM >= (#{pageNum} * 10 - 9) AND RNUM <= (#{pageNum} * 10)) ]]>
+</select>
+
+<!-- PINGPONG_MMR RANKING -->
+<select id="getPingpongRank" parameterType="com.boot.finalpro.betting.model.MMRRankingDTO"
+	resultType="com.boot.finalpro.betting.model.MMRRankingDTO">
+SELECT RANKING, TEAM_NAME, PINGPONG_MMR
+FROM(SELECT ROWNUM AS RNUM, RANKING, TEAM_NAME, PINGPONG_MMR
+	 FROM(SELECT RANK()OVER(ORDER BY PINGPONG_MMR DESC) AS RANKING, TEAM_NAME, PINGPONG_MMR
+		  FROM TEAM_DETAIL
+	 	  ORDER BY PINGPONG_MMR DESC, TEAM_NAME ASC)
+	 WHERE 1=1
+	 <if test="keyword != null and keyword != ''" >
+	 	AND TEAM_NAME LIKE '%'||#{keyword}||'%'
+	 </if>)
+<![CDATA[ WHERE (RNUM >= (#{pageNum} * 10 - 9) AND RNUM <= (#{pageNum} * 10)) ]]>
+</select>
+
+<select id="getRankCount" parameterType="com.boot.finalpro.betting.model.MMRRankingDTO"
+	resultType="java.lang.Integer">
+	SELECT NVL(COUNT(*), 0) AS CNT
+	FROM TEAM_DETAIL
+	WHERE 1=1
+	<if test="keyword != null and keyword != ''" >
+		AND TEAM_NAME LIKE '%'||#{keyword}||'%'
+	</if>		  
+</select>
+
+<!-- ALL_MMR RANKING -->
+<select id="getAllRank" parameterType="com.boot.finalpro.betting.model.MMRRankingDTO"
+	resultType="com.boot.finalpro.betting.model.MMRRankingDTO">
+SELECT RANKING, TEAM_NAME, ALL_MMR
+FROM(SELECT ROWNUM AS RNUM, RANKING, TEAM_NAME, ALL_MMR
+	 FROM(SELECT RANK()OVER(ORDER BY SUM(SOCCER_MMR + BASKETBALL_MMR + BASEBALL_MMR + BADMINTON_MMR + PINGPONG_MMR) DESC) AS RANKING, TEAM_NAME, SUM(SOCCER_MMR + BASKETBALL_MMR + BASEBALL_MMR + BADMINTON_MMR + PINGPONG_MMR) AS ALL_MMR
+		  FROM TEAM_DETAIL
+		  GROUP BY TEAM_NAME)
+	 WHERE 1=1
+	 <if test="keyword != null and keyword != ''" >
+	 	AND TEAM_NAME LIKE '%'||#{keyword}||'%'
+	 </if>)
+<![CDATA[ WHERE (RNUM >= (#{pageNum} * 10 - 9) AND RNUM <= (#{pageNum} * 10)) ]]>
+</select>
+
+	    
+</mapper>

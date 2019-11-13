@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+
+	<!-- 재덕꺼 -->
+	<!-- JD Team -->
+	<definition name="teamapplication.tiles"
+		template="/WEB-INF/views/layout/template.jsp">
+		<put-attribute name="header_import"
+			value="/WEB-INF/views/common/header_import.jsp" />
+		<put-attribute name="top_inc"
+			value="/WEB-INF/views/common/top_inc.jsp" />
+		<put-attribute name="top_menu"
+			value="/WEB-INF/views/common/top_menu.jsp" />
+		<put-attribute name="body_top"
+			value="/WEB-INF/views/team/team_menu.jsp" />
+		<put-attribute name="body"
+			value="/WEB-INF/views/team/teamapplication.jsp" />
+		<put-attribute name="footer"
+			value="/WEB-INF/views/common/footer.jsp" />
+	</definition>
+
+	<definition name="teamlist.tiles"
+		extends="teamapplication.tiles">
+		<put-attribute name="body"
+			value="/WEB-INF/views/team/teamlist.jsp" />
+	</definition>
+
+	<definition name="teamdetail.tiles"
+		extends="teamapplication.tiles">
+		<put-attribute name="body"
+			value="/WEB-INF/views/team/teamdetail.jsp" />
+	</definition>
+
+	<definition name="memberapplication.tiles"
+		extends="teamapplication.tiles">
+		<put-attribute name="body"
+			value="/WEB-INF/views/team/memberapplication.jsp" />
+	</definition>
+
+	<definition name="matchinglist.tiles"
+		extends="teamapplication.tiles">
+		<put-attribute name="body"
+			value="/WEB-INF/views/team/matchinglist.jsp" />
+	</definition>
+
+	<definition name="memberstate.tiles"
+		extends="teamapplication.tiles">
+		<put-attribute name="body"
+			value="/WEB-INF/views/team/memberstate.jsp" />
+	</definition>
+
+	<definition name="teamdetailup.tiles"
+		extends="teamapplication.tiles">
+		<put-attribute name="body"
+			value="/WEB-INF/views/team/teamdetailup.jsp" />
+	</definition>
+
+	<definition name="recruitment.tiles"
+		extends="teamapplication.tiles">
+		<put-attribute name="body"
+			value="/WEB-INF/views/team/recruitment.jsp" />
+	</definition>
+	<definition name="recruitmentlist.tiles"
+		extends="teamapplication.tiles">
+		<put-attribute name="body"
+			value="/WEB-INF/views/team/recruitmentlist.jsp" />
+	</definition>
+
+</tiles-definitions>

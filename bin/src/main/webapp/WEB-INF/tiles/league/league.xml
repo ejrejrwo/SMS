@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+
+	<!-- 리그용 -->
+	<definition name="userleaguepage.tiles"
+		template="/WEB-INF/views/layout/template.jsp">
+		<put-attribute name="header_import"
+			value="/WEB-INF/views/common/header_import.jsp" />
+		<put-attribute name="top_inc"
+			value="/WEB-INF/views/common/top_inc.jsp" />
+		<put-attribute name="top_menu"
+			value="/WEB-INF/views/common/top_menu.jsp" />
+		<put-attribute name="body_top"
+			value="/WEB-INF/views/league/league_menu.jsp" />
+		<put-attribute name="body"
+			value="/WEB-INF/views/league/userpage.jsp" />
+		<put-attribute name="footer"
+			value="/WEB-INF/views/common/footer.jsp" />
+	</definition>
+
+	<definition name="userleagueapply.tiles"
+		extends="userleaguepage.tiles">
+		<put-attribute name="body"
+			value="/WEB-INF/views/league/applypage.jsp" />
+	</definition>
+
+</tiles-definitions>

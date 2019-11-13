@@ -1,0 +1,25 @@
+.table {
+	width: 85%;
+	margin: auto;
+}
+.table td, th{
+	vertical-align: middle !important;
+	text-align: center;
+}
+.table tr {
+	/* height: 55px; */
+}
+.form-control {
+	width: 40%;
+	margin: auto;
+}
+#bankNumber {
+	width: 40%;	
+}
+
+#li-exchange {
+	background-color: #dadada;
+}
+#exchange_money_font, #bank_font, #bank_number_font {
+	color: red;
+}

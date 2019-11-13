@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+
+	<!-- TeamBbs(민호!) -->
+	<definition name="TeamBbs.tiles" extends="teamapplication.tiles">
+		<put-attribute name="body" value="/WEB-INF/views/teamBbs/TeamBbsList.jsp" />
+	</definition>
+	
+	<definition name="TeamBbsWrite.tiles" extends="teamapplication.tiles">
+		<put-attribute name="body" value="/WEB-INF/views/teamBbs/TeamBbsWrite.jsp" />
+	</definition>
+	
+	<definition name="TeamBbsDetail.tiles" extends="teamapplication.tiles">
+		<put-attribute name="body" value="/WEB-INF/views/teamBbs/TeamBbsDetail.jsp" />
+	</definition>
+	
+	<definition name="TeamBbsUpdate.tiles" extends="teamapplication.tiles">
+		<put-attribute name="body" value="/WEB-INF/views/teamBbs/TeamBbsUpdate.jsp" />
+	</definition>
+	<definition name="SubBbs.tiles" extends="teamapplication.tiles">
+		<put-attribute name="body" value="/WEB-INF/views/teamBbs/SubBbsList.jsp" />
+	</definition>
+	<definition name="SubBbsWrite.tiles" extends="teamapplication.tiles">
+		<put-attribute name="body" value="/WEB-INF/views/teamBbs/SubBbsWrite.jsp" />
+	</definition>
+	<definition name="SubBbsUpdate.tiles" extends="teamapplication.tiles">
+		<put-attribute name="body" value="/WEB-INF/views/teamBbs/SubBbsUpdate.jsp" />
+	</definition>
+	<definition name="SubBbsDetail.tiles" extends="teamapplication.tiles">
+		<put-attribute name="body" value="/WEB-INF/views/teamBbs/SubBbsDetail.jsp" />
+	</definition>
+
+</tiles-definitions>

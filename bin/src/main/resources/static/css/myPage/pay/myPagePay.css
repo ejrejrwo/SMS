@@ -1,0 +1,49 @@
+
+.form-div {
+	width: 930px;
+	height: 500px;
+	margin: auto;
+}
+
+.form-div-sub1 {
+	width: 350px;
+	height: 400px;
+	float: left;
+	margin-top: 50px;
+	margin-left: 50px;
+}
+
+.form-div-sub2 {
+	width: 350px;
+	height: 450px;
+	float: right;
+	margin-top: 88px;
+	margin-right: 88px;
+}
+
+.col-md-4 {
+	padding: 0;
+	margin-bottom: 15px;
+}
+
+.col-md-7 {
+	padding: 0;
+	width: 66.67%;
+	margin-bottom: 15px;
+}
+
+.form-control {
+	margin-bottom: 0;
+}
+#payMoney_font {
+	color: red;
+	visibility: hidden;
+}
+
+#payBtn {
+	height: 45px;
+}
+
+#li-pay {
+	background-color: #dadada;
+}

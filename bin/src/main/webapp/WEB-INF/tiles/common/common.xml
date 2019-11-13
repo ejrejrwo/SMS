@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+	
+	<!-- main -->
+	<definition name="main.tiles"
+		template="/WEB-INF/views/layout/main_template.jsp">
+		<put-attribute name="header_import"
+			value="/WEB-INF/views/common/header_import.jsp" />
+		<put-attribute name="top_inc"
+			value="/WEB-INF/views/common/top_inc.jsp" />
+		<!-- <put-attribute name="top_menu" value="/WEB-INF/views/common/top_menu.jsp"/> -->
+		<put-attribute name="body"
+			value="/WEB-INF/views/main/main.jsp" />
+		<put-attribute name="footer"
+			value="/WEB-INF/views/common/footer.jsp" />
+	</definition>
+	
+	<!-- 문의전화 -->
+	<definition name="phoneguide.tiles" extends="gamelist.tiles">
+		<put-attribute name="body_top"
+			value="/WEB-INF/views/main/info_menu.jsp" />
+		<put-attribute name="body"
+			value="/WEB-INF/views/main/phone_guide.jsp" />
+	</definition>
+
+	<!-- 인사말 -->
+	<definition name="common1.tiles" extends="gamelist.tiles">
+		<put-attribute name="body_top" value="/WEB-INF/views/main/info_menu.jsp" />
+		<put-attribute name="body" value="/WEB-INF/views/teamBbs/common1.jsp" />
+	</definition>
+	
+	<!-- 경기장 -->
+	<definition name="stadium.tiles" extends="gamelist.tiles">
+		<put-attribute name="body_top" value="/WEB-INF/views/main/info_menu.jsp" />
+		<put-attribute name="body" value="/WEB-INF/views/game/stadium.jsp" />
+	</definition>
+	
+	<!-- 기타 -->
+	<definition name="delId.tiles" template="/WEB-INF/views/status/delete.jsp" >
+	</definition>
+	
+	<definition name="deniedPage.tiles" template="/WEB-INF/views/status/403.jsp" >
+	</definition>
+	
+</tiles-definitions>

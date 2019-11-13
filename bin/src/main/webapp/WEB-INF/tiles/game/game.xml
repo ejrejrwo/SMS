@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+
+	<definition name="gamelist.tiles"
+		template="/WEB-INF/views/layout/template.jsp">
+		<put-attribute name="header_import"
+			value="/WEB-INF/views/common/header_import.jsp" />
+		<put-attribute name="top_inc"
+			value="/WEB-INF/views/common/top_inc.jsp" />
+		<put-attribute name="top_menu"
+			value="/WEB-INF/views/common/top_menu.jsp" />
+		<put-attribute name="body_top"
+			value="/WEB-INF/views/game/game_menu.jsp" />
+		<put-attribute name="body"
+			value="/WEB-INF/views/game/game_list.jsp" />
+		<put-attribute name="footer"
+			value="/WEB-INF/views/common/footer.jsp" />
+	</definition>
+
+	<definition name="gamemake.tiles" extends="gamelist.tiles">
+		<put-attribute name="body"
+			value="/WEB-INF/views/game/game_make.jsp" />
+	</definition>
+
+	<definition name="gamedetail.tiles" extends="gamelist.tiles">
+		<put-attribute name="body"
+			value="/WEB-INF/views/game/game_detail.jsp" />
+	</definition>
+
+	<definition name="game_update.tiles"
+		extends="gamelist.tiles">
+		<put-attribute name="body"
+			value="/WEB-INF/views/game/game_update.jsp" />
+	</definition>
+
+</tiles-definitions>

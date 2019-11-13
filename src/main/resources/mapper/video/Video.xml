@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Video">
+
+   <!-- 동영상 업로드 -->
+   <insert id="videoUpload" parameterType="com.boot.finalpro.video.model.VideoDTO">
+   	INSERT INTO VIDEO
+   	VALUES( VIDEO_SEQ.NEXTVAL, #{category}, #{id}, #{title}, #{content}, 0, 0, 0, #{file_name}, 0, SYSDATE )
+   </insert> 
+   
+   <!-- 동영상리스트 불러오기 -->
+   <select id="videolist" parameterType="com.boot.finalpro.game.model.GameParam" resultType="com.boot.finalpro.video.model.VideoDTO">
+   		SELECT B.SEQ_VIDEO, B.CATEGORY, B.ID, B.TITLE, B.CONTENT, B.LIKE_COUNT, B.READ_COUNT, B.REPORT_COUNT, B.FILE_NAME, B.DEL, B.WDATE 
+		FROM (SELECT ROWNUM AS RNUM, A.SEQ_VIDEO, A.CATEGORY, A.ID, A.TITLE, A.CONTENT, A.LIKE_COUNT, A.READ_COUNT, A.REPORT_COUNT, A.FILE_NAME, A.DEL, A.WDATE 
+			  FROM (SELECT SEQ_VIDEO, CATEGORY, ID, TITLE, CONTENT, LIKE_COUNT, READ_COUNT, REPORT_COUNT, FILE_NAME, DEL, WDATE  
+			  		FROM VIDEO	
+		  			WHERE DEL=0		  			
+			  			<if test="choice != null and choice != ''
+			  				and keyword != null and keyword != ''">	
+			  				<if test="choice == 'category'">
+			  					AND CATEGORY LIKE '%'||#{keyword}||'%'
+			  				</if>	
+			  				<if test="choice == 'id'">
+			  					AND ID LIKE '%'||#{keyword}||'%'
+			  				</if>	
+			  				<if test="choice == 'title'">
+			  					AND TITLE LIKE '%'||#{keyword}||'%'
+			  				</if>	  				
+			  			</if>
+			  		ORDER BY SEQ_VIDEO DESC)A
+			  	 WHERE ROWNUM <![CDATA[<=]]>#{endNum} )B		  
+		WHERE B.RNUM <![CDATA[>=]]>#{startNum}		  	
+   </select>
+   
+   <!-- 동영상 전체갯수 -->
+   <select id="getVideoCount" parameterType="com.boot.finalpro.game.model.GameParam" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0) AS CNT
+		FROM VIDEO
+		WHERE DEL=0			
+		<if test="choice != null and choice != ''
+			and keyword != null and keyword != ''">
+			<if test="choice == 'category'">
+				AND CATEGORY LIKE '%'||#{keyword}||'%'
+			</if>
+			<if test="choice == 'id'">
+				AND ID LIKE '%'||#{keyword}||'%'
+			</if>		
+			<if test="choice == 'title'">
+				AND TITLE LIKE '%'||#{keyword}||'%'
+			</if>	  				
+	  	</if>	  	
+	</select>
+   
+   <!-- 동영상 디테일 DTO 불러오기 -->
+   <select id="videodetail" parameterType="java.lang.Integer" resultType="com.boot.finalpro.video.model.VideoDTO">
+   		SELECT * FROM VIDEO
+   		WHERE SEQ_VIDEO=#{seq_video}
+   </select>
+   
+   <!-- 동영상 조회수 -->
+   <update id="videoRead" parameterType="java.lang.Integer">
+   		UPDATE VIDEO
+   		SET READ_COUNT = READ_COUNT+1
+   		WHERE SEQ_VIDEO=#{seq_video}
+   </update>
+    
+    <!-- 동영상 댓글가져오기 -->
+    <!-- <select id="commentlist" parameterType="java.lang.Integer" resultType="com.boot.finalpro.video.model.VideoCommentDTO">
+    	SELECT * FROM VIDEO_COMMENT
+    	WHERE PARENT=#{parent}
+    	ORDER BY REF DESC, STEP ASC
+    </select> -->
+    
+    <select id="commentlist" parameterType="com.boot.finalpro.video.model.VideoDTO" resultType="com.boot.finalpro.video.model.VideoCommentDTO">
+    	SELECT DISTINCT V.SEQ, V.ID, V.CONTENT, V.REF, V.STEP, V.DEPTH
+				, V.PARENT, V.DEL, V.LIKE_COUNT, V.REPORT_COUNT, V.WDATE
+				, O.ID AS OID, O.VIDEO_COMMENT_LIKE
+		FROM VIDEO_COMMENT V, OVERLAP O
+		WHERE V.SEQ = O.VIDEO_COMMENT_LIKE(+)
+				AND V.PARENT=#{seq_video} AND O.ID(+)=#{id}
+    	ORDER BY V.REF DESC, V.STEP ASC
+    </select>
+    
+    <!-- 동영상 댓글등록 -->
+    <insert id="commentWrite" parameterType="com.boot.finalpro.video.model.VideoCommentDTO">
+    	INSERT INTO VIDEO_COMMENT
+    	VALUES(VIDEO_COMMENT_SEQ.NEXTVAL, #{id}, #{content}, (SELECT NVL(MAX(REF), 0) +1 FROM VIDEO_COMMENT)
+    			, 0, 0, #{parent}, 0, 0, 0, SYSDATE)
+    </insert>
+    
+    <!-- 대댓글 STEP업데이트 -->
+    <update id="replyUpdate" parameterType="com.boot.finalpro.video.model.VideoCommentDTO">
+    	UPDATE VIDEO_COMMENT
+    	SET STEP=STEP+1
+    	WHERE REF=(SELECT REF FROM VIDEO_COMMENT WHERE SEQ=#{seq})
+		AND STEP <![CDATA[>]]> (SELECT STEP FROM VIDEO_COMMENT WHERE SEQ=#{seq})
+    </update>
+        
+    <!-- 대댓글등록 -->
+    <insert id="replyComment" parameterType="com.boot.finalpro.video.model.VideoCommentDTO">
+    	INSERT INTO VIDEO_COMMENT
+    	VALUES(VIDEO_COMMENT_SEQ.NEXTVAL, #{id}, #{content}
+    		, (SELECT REF FROM VIDEO_COMMENT WHERE SEQ=#{seq}),
+			  (SELECT STEP FROM VIDEO_COMMENT WHERE SEQ=#{seq})+1,
+			  (SELECT DEPTH FROM VIDEO_COMMENT WHERE SEQ=#{seq})+1,
+			  #{parent}, 0, 0, 0, SYSDATE)   	
+    </insert>
+    
+    <!-- 메인 동영상 좋아요 상위2개 -->
+    <select id="mainVideo" resultType="com.boot.finalpro.video.model.VideoDTO">
+    	SELECT * FROM ( SELECT * 
+			  			FROM VIDEO 
+			  			ORDER BY LIKE_COUNT DESC)
+		WHERE ROWNUM<![CDATA[<=]]>2    
+    </select>
+ 
+<!-- ///////////////////////video 좋아요 -->  
+
+    <!-- video 좋아요 클릭 -->
+    <update id="videoLike" parameterType="java.lang.Integer">
+    	UPDATE VIDEO
+    	SET LIKE_COUNT=LIKE_COUNT+1
+    	WHERE SEQ_VIDEO=#{seq_video}
+    </update>
+    
+    <!-- video 좋아요 클릭 id저장 -->
+    <insert id="videoLikeOver" parameterType="com.boot.finalpro.video.model.VideoDTO">
+    	INSERT INTO OVERLAP(SEQ, ID, VIDEO_LIKE)
+    	VALUES(OVERLAP_SEQ.NEXTVAL, #{id}, #{seq_video})
+    </insert>
+    
+    <!-- like_count 갯수 가져오기 -->
+	<select id="videoLikeCount" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+		SELECT LIKE_COUNT
+		FROM VIDEO
+		WHERE SEQ_VIDEO=#{seq_video}
+	</select>
+
+	<!-- like overlap 중복체크 -->
+ 	<select id="videoLikeCheck" parameterType="com.boot.finalpro.teambbs.model.OverlapDTO" resultType="com.boot.finalpro.teambbs.model.OverlapDTO">
+		SELECT SEQ, ID, VIDEO_LIKE
+		FROM OVERLAP
+		WHERE VIDEO_LIKE=#{video_like} AND ID=#{id}
+	</select>
+	
+	<!-- video unlike 클릭 -->
+    <update id="videoUnlike" parameterType="java.lang.Integer">
+    	UPDATE VIDEO
+    	SET LIKE_COUNT=LIKE_COUNT-1
+    	WHERE SEQ_VIDEO=#{seq_video}
+    </update>
+	
+	 <!-- video unlike id 삭제 -->
+    <insert id="videoUnlikeOver" parameterType="com.boot.finalpro.video.model.VideoDTO">
+    	DELETE FROM OVERLAP
+    	WHERE VIDEO_LIKE=#{seq_video} AND ID=#{id}
+    </insert>
+    
+<!-- ///////////////////////video comment 좋아요 -->   
+
+	 <!-- comment video 좋아요 클릭 -->
+    <update id="commentVideoLike" parameterType="java.lang.Integer">
+    	UPDATE VIDEO_COMMENT
+    	SET LIKE_COUNT=LIKE_COUNT+1
+    	WHERE SEQ=#{seq}
+    </update>
+    
+    <!-- video 좋아요 클릭 id저장 -->
+    <insert id="commentVideoLikeOver" parameterType="com.boot.finalpro.video.model.VideoCommentDTO">
+    	INSERT INTO OVERLAP(SEQ, ID, VIDEO_COMMENT_LIKE)
+    	VALUES(OVERLAP_SEQ.NEXTVAL, #{id}, #{seq})
+    </insert>
+    
+    <!-- like_count 갯수 가져오기 -->
+	<select id="commentVideoLikeCount" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+		SELECT LIKE_COUNT
+		FROM VIDEO_COMMENT
+		WHERE SEQ=#{seq}
+	</select>
+
+	<!-- like overlap 중복체크 -->
+ 	<select id="commentVideoLikeCheck" parameterType="com.boot.finalpro.teambbs.model.OverlapDTO" resultType="com.boot.finalpro.teambbs.model.OverlapDTO">
+		SELECT SEQ, ID, VIDEO_COMMENT_LIKE
+		FROM OVERLAP
+		WHERE VIDEO_COMMENT_LIKE=#{video_comment_like} AND ID=#{id}
+	</select>
+	
+	<!-- video unlike 클릭 -->
+    <update id="commentVideoUnlike" parameterType="java.lang.Integer">
+    	UPDATE VIDEO_COMMENT
+    	SET LIKE_COUNT=LIKE_COUNT-1
+    	WHERE SEQ=#{seq}
+    </update>
+	
+	 <!-- video unlike id 삭제 -->
+    <insert id="commentVideoUnlikeOver" parameterType="com.boot.finalpro.video.model.VideoCommentDTO">
+    	DELETE FROM OVERLAP
+    	WHERE VIDEO_COMMENT_LIKE=#{seq} AND ID=#{id}
+    </insert>
+   
+	
+
+<!-- ////////////////////////////////////////////////////////////////////////////////////// -->
+	<!-- video 신고수 추가 -->
+	<update id="videoReport" parameterType="com.boot.finalpro.video.model.VideoDTO">
+		UPDATE VIDEO
+		SET REPORT_COUNT=REPORT_COUNT+1
+		WHERE SEQ_VIDEO=#{seq_video}
+	</update>
+	
+	<!-- video overlap에 추가 -->
+	<insert id="VideoReportInsert" parameterType="com.boot.finalpro.video.model.VideoDTO">
+		INSERT INTO OVERLAP(SEQ, ID, VIDEO_REPORT)
+		VALUES(OVERLAP_SEQ.NEXTVAL, #{id}, #{seq_video}) 
+	</insert>
+	
+	<!-- video 신고 중복 체크 -->
+	<select id="VideoReportCheck" parameterType="com.boot.finalpro.video.model.VideoDTO"
+		resultType="com.boot.finalpro.teambbs.model.OverlapDTO">
+		SELECT SEQ, ID, VIDEO_REPORT
+		FROM OVERLAP
+		WHERE ID=#{id} AND VIDEO_REPORT=#{seq_video}
+	</select>
+	
+	<!-- video 내용 관리자에게 보내기 -->
+	<insert id="VideoReportAdmin" parameterType="com.boot.finalpro.video.model.VideoReportDTO">
+		INSERT INTO VIDEO_REPORT
+		VALUES(VIDEO_REPORT_SEQ.NEXTVAL, #{id}, #{content}, #{seq}, 1)
+	</insert>
+	
+	<!-- video 신고수 가져오기 -->
+	<select id="VideoReportCount" parameterType="com.boot.finalpro.video.model.VideoDTO"
+		resultType="java.lang.Integer">
+		SELECT REPORT_COUNT
+		FROM VIDEO
+		WHERE SEQ_VIDEO=#{seq_video}
+	</select>
+	
+	<!-- video List 가져오기 -->
+	<select id="getVideoReportList" parameterType="java.lang.Integer"
+		resultType="com.boot.finalpro.video.model.VideoDTO">
+		SELECT * 
+		FROM VIDEO
+		WHERE SEQ_VIDEO=#{seq_video}
+	</select>
+
+<!-- ////////////////////////////////////////////////////////////////////////////////////// -->
+	
+	<!-- video comment 신고수 추가 -->
+	<update id="videoCommentReport" parameterType="com.boot.finalpro.video.model.VideoCommentDTO">
+		UPDATE VIDEO_COMMENT
+		SET REPORT_COUNT=REPORT_COUNT+1
+		WHERE SEQ=#{seq}
+	</update>
+	
+	<!-- member 신고수 추가 -->
+	<update id="memberReportUpdate" parameterType="java.lang.String">
+		UPDATE MEMBER
+		SET REPORT_COUNT = REPORT_COUNT + 1
+		WHERE ID=#{write_id}
+	</update>
+	
+	<!-- video comment overlap에 추가 -->
+	<insert id="CommentReportInsert" parameterType="com.boot.finalpro.video.model.VideoCommentDTO">
+		INSERT INTO OVERLAP(SEQ, ID, VIDEO_COMMENT_REPORT)
+		VALUES(OVERLAP_SEQ.NEXTVAL, #{id}, #{seq}) 
+	</insert>
+	
+	<!-- video comment 신고 중복 체크 -->
+	<select id="CommentReportCheck" parameterType="com.boot.finalpro.video.model.VideoCommentDTO"
+		resultType="com.boot.finalpro.teambbs.model.OverlapDTO">
+		SELECT SEQ, ID, VIDEO_COMMENT_REPORT
+		FROM OVERLAP
+		WHERE ID=#{id} AND VIDEO_COMMENT_REPORT=#{seq}
+	</select>
+	
+	<!-- video comment 내용 관리자에게 보내기 -->
+	<insert id="CommentReportAdmin" parameterType="com.boot.finalpro.video.model.VideoReportDTO">
+		INSERT INTO VIDEO_REPORT
+		VALUES(VIDEO_REPORT_SEQ.NEXTVAL, #{id}, #{content}, #{seq}, 2)
+	</insert>
+	
+	<!-- video comment 신고수 가져오기 -->
+	<select id="CommentReportCount" parameterType="com.boot.finalpro.video.model.VideoCommentDTO"
+		resultType="java.lang.Integer">
+		SELECT REPORT_COUNT
+		FROM VIDEO_COMMENT
+		WHERE SEQ=#{seq}
+	</select>
+	
+	<!-- video comment List 가져오기 -->
+	<select id="getCommentReportList" parameterType="java.lang.Integer"
+		resultType="com.boot.finalpro.video.model.VideoCommentDTO">
+		SELECT * 
+		FROM VIDEO_COMMENT
+		WHERE SEQ=#{seq}
+	</select>
+	
+<!-- ////////////////////////////////////////////////////////////////////////////////////// -->
+
+	<!-- VideoReportDTO 전체리스트 -->
+	<select id="getVideoReport" resultType="com.boot.finalpro.video.model.VideoReportDTO">
+		SELECT DISTINCT PARENT, CATEGORY FROM VIDEO_REPORT	
+	</select>
+	
+	<!-- VideoReportDTO + VideoDTO 리스트 -->
+	<select id="getDetailVideoReport" parameterType="java.lang.Integer" resultType="com.boot.finalpro.video.model.VideoDTO">
+		SELECT V.SEQ_VIDEO, V.CATEGORY, V.ID, V.TITLE, V.CONTENT, V.LIKE_COUNT, V.READ_COUNT, V.REPORT_COUNT, V.FILE_NAME, V.WDATE
+				, R.SEQ, R.ID AS R_ID, R.CONTENT AS R_CONTENT,  R.PARENT, R.CATEGORY AS R_CATEGORY
+		FROM VIDEO V, VIDEO_REPORT R
+		WHERE V.SEQ_VIDEO = R.PARENT
+			AND V.SEQ_VIDEO=#{seq_video} AND R.CATEGORY=1
+	</select>
+	
+	<!-- VideoReportDTO + VideoCommentDTO 리스트 -->
+	<select id="getDetailCommentReport" parameterType="java.lang.Integer" resultType="com.boot.finalpro.video.model.VideoCommentDTO">
+		SELECT V.SEQ, V.ID, V.CONTENT, V.REF, V.STEP, V.DEPTH, V.PARENT, V.LIKE_COUNT, V.REPORT_COUNT, V.WDATE
+				, R.SEQ AS R_SEQ, R.ID AS R_ID, R.CONTENT AS R_CONTENT, R.PARENT AS R_PARENT, R.CATEGORY
+		FROM VIDEO_COMMENT V, VIDEO_REPORT R
+		WHERE V.SEQ = R.PARENT
+			AND V.PARENT=#{seq_video} AND R.CATEGORY=2
+	</select>
+	
+	<!-- VideoDTO 삭제 -->
+	<update id="videoDelete" parameterType="java.lang.Integer">
+		UPDATE VIDEO
+		SET DEL=1
+		WHERE SEQ_VIDEO=#{seq_video}
+	</update>
+		
+	<!-- VideoCommentDTO 삭제 -->
+	<update id="videoCommentDelete" parameterType="java.lang.Integer">
+		UPDATE VIDEO_COMMENT
+		SET DEL=1
+		WHERE SEQ=#{seq}
+	</update>
+	
+	<!-- 동영상 report_count-1 -->
+	<update id="videoReportCancel" parameterType="java.lang.Integer">
+		UPDATE VIDEO
+		SET REPORT_COUNT=REPORT_COUNT-1
+		WHERE SEQ_VIDEO=#{seq_video}
+	</update>
+	
+	<!-- 글쓴이 report_count-1 -->
+	<update id="memberReportCancel" parameterType="java.lang.String">
+		UPDATE MEMBER
+		SET REPORT_COUNT=REPORT_COUNT-1
+		WHERE ID=#{id}
+	</update>
+	
+	<!-- 신고자 report_count+1 -->
+	<update id="memberReportPlus" parameterType="java.lang.String">
+		UPDATE MEMBER
+		SET REPORT_COUNT=REPORT_COUNT+1
+		WHERE ID=#{r_id}
+	</update>
+	
+	<!-- overlap삭제(신고자 id, seq) -->
+	<delete id="overDelete" parameterType="com.boot.finalpro.teambbs.model.OverlapDTO">
+		DELETE OVERLAP
+		WHERE ID=#{id} AND VIDEO_REPORT=#{video_report}
+	</delete>
+	
+	<!-- video_report 삭제 -->
+	<delete id="videoReportDelete" parameterType="com.boot.finalpro.teambbs.model.OverlapDTO">
+		DELETE VIDEO_REPORT
+		WHERE ID=#{id} AND PARENT=#{video_report}
+	</delete>
+	
+	
+	<!-- 댓글 report_count-1 -->
+	<update id="videoCommentCancel" parameterType="java.lang.Integer">
+		UPDATE VIDEO_COMMENT
+		SET REPORT_COUNT=REPORT_COUNT-1
+		WHERE SEQ=#{seq}
+	</update>
+	
+	<!-- 글쓴이 report_count-1 -->
+	
+	<!-- 신고자 report_count+1 -->
+	
+	<!-- overlap삭제(신고자 id, seq) -->
+	<delete id="overCommentDelete" parameterType="com.boot.finalpro.teambbs.model.OverlapDTO">
+		DELETE OVERLAP
+		WHERE ID=#{id} AND VIDEO_COMMENT_REPORT=#{video_comment_report}
+	</delete>
+	
+	<!-- video_report 삭제 -->
+	<delete id="videoReportCommentDelete" parameterType="com.boot.finalpro.teambbs.model.OverlapDTO">
+		DELETE VIDEO_REPORT
+		WHERE ID=#{id} AND PARENT=#{video_comment_report}
+	</delete>
+	
+
+</mapper>
+
+
+
+

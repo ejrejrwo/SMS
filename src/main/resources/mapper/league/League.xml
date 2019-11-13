@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- <mapper namespace="com.mde.app.common.dao"> -->
+<mapper namespace="league">
+	
+	<!-- 현재 리그데이터 가져오기 -->
+	<select id="nowdata" resultType="com.boot.finalpro.game.model.GameDTO">
+		<![CDATA[
+        SELECT SEQ_GAME, CATEGORY, NAME_TEAM1, NAME_TEAM2, GDATE, NAME_STADIUM, TITLE, CONTENT, DEL, PAYOUT_R1, PAYOUT_R2, SCORE1, SCORE2, GAME_RESULT, LEAGUE, READ_COUNT, WDATE
+        FROM GAME
+        WHERE LENGTH(LEAGUE) < 3
+        ORDER BY SEQ_GAME ASC
+        ]]> 
+    </select>
+    
+    <!-- 옛날 리그데이터 가져오기 -->
+    <select id="olddata" resultType="com.boot.finalpro.game.model.GameDTO" parameterType="java.lang.String">
+		<![CDATA[
+        SELECT SEQ_GAME, CATEGORY, NAME_TEAM1, NAME_TEAM2, GDATE, NAME_STADIUM, TITLE, CONTENT, DEL, PAYOUT_R1, PAYOUT_R2, SCORE1, SCORE2, GAME_RESULT, LEAGUE, READ_COUNT, WDATE
+        FROM GAME
+        WHERE LEAGUE = #{yyyymm}
+        ORDER BY SEQ_GAME ASC
+        ]]> 
+    </select>
+    
+    <!-- 랭커리스트 -->
+    <select id="Ranksearch" resultType="com.boot.finalpro.teambbs.model.TeamDetailDTO" parameterType="java.lang.String">
+		<![CDATA[
+        SELECT TEAM_NAME, LEADER, TITLE, CONTENT, LIKE_COUNT, DEADLINE, SOCCER_MMR, BASKETBALL_MMR, BASEBALL_MMR, BADMINTON_MMR, PINGPONG_MMR, REPORT_COUNT, FDATE, SPORT_CATEGORY, FILE_NAME
+        FROM (SELECT ROW_NUMBER()OVER(ORDER BY #{category} DESC) AS RNUM, 
+        	TEAM_NAME, LEADER, TITLE, CONTENT, LIKE_COUNT, DEADLINE, SOCCER_MMR, BASKETBALL_MMR, BASEBALL_MMR, BADMINTON_MMR, PINGPONG_MMR, REPORT_COUNT, FDATE, SPORT_CATEGORY, FILE_NAME
+			FROM TEAM_DETAIL)
+        WHERE RNUM BETWEEN 1 AND 20
+        ]]>
+    </select>
+    
+    <!-- 수락한팀들 리스트  -->
+    <select id="acceptlist" resultType="com.boot.finalpro.league.model.LeagueMatchDTO">
+		<![CDATA[
+        SELECT SEQ, TEAM_NAME, LEADER_ID
+        FROM LEAGUE_MATCH
+        ORDER BY SEQ ASC
+        ]]> 
+    </select>
+    
+    <!-- 메세지 보내기 -->
+    <insert id="messagesend" parameterType="com.boot.finalpro.mypage.model.MessageDTO">
+    	INSERT INTO MESSAGE(SEQ, SEND_ID, RECEIVE_ID, CONTENT, READING, WDATE, SEND_DEL, RECEIVE_DEL)
+    	VALUES(MESSAGE_SEQ.NEXTVAL, #{send_id}, #{receive_id}, #{content}, 1, SYSDATE, 0, 0)
+    </insert>
+    
+    
+    <!-- 8강게임 입력 -->
+    <insert id="write8league" parameterType="com.boot.finalpro.game.model.GameDTO">
+    	INSERT INTO GAME(SEQ_GAME, CATEGORY, NAME_TEAM1, NAME_TEAM2, GDATE, NAME_STADIUM, TITLE, CONTENT, DEL, PAYOUT_R1, PAYOUT_R2, SCORE1, SCORE2, GAME_RESULT, LEAGUE, READ_COUNT, WDATE)
+    	VALUES(GAME_SEQ.NEXTVAL, #{category}, #{name_team1}, #{name_team2}, #{gdate}, #{name_stadium}, #{title}, #{content}, 0, 0, 0, 0, 0, null, #{league}, 0, SYSDATE)
+    </insert>
+    
+    <!-- 나머지게임 입력 -->
+    <insert id="writeleague" parameterType="com.boot.finalpro.game.model.GameDTO">
+    	INSERT INTO GAME(SEQ_GAME, CATEGORY, NAME_TEAM1, NAME_TEAM2, GDATE, NAME_STADIUM, TITLE, CONTENT, DEL, PAYOUT_R1, PAYOUT_R2, SCORE1, SCORE2, GAME_RESULT, LEAGUE, READ_COUNT, WDATE)
+    	VALUES(GAME_SEQ.NEXTVAL, #{category}, null, null, #{gdate}, #{name_stadium}, #{title}, #{content}, 0, 0, 0, 0, 0, null, #{league}, 0, SYSDATE)
+    </insert>
+    
+    <!-- 경기장 예약을 입력 -->
+    <insert id="bookGame" parameterType="com.boot.finalpro.game.model.BookingDTO">
+    	INSERT INTO BOOKING
+    	VALUES(BOOKING_SEQ.NEXTVAL, (SELECT NVL(MAX(SEQ_GAME), 0) FROM GAME), #{id}, #{bdate}, 0, 0, #{name_stadium}, #{book_time}, SYSDATE)
+    </insert>
+    
+    <!-- 리그가 있는지 없는지 체크 -->
+    <select id="leaguecheck" resultType="java.lang.Integer">
+    	<![CDATA[
+    	SELECT COUNT(*)
+        FROM GAME
+        WHERE LENGTH(LEAGUE) < 3
+        ]]> 
+    </select>
+    
+    <!-- 리그추가가 완료되면 리그참가수락팀리스트 삭제하기 -->
+    <delete id="LeagueMatchDelete">
+    	DELETE FROM LEAGUE_MATCH
+    </delete>
+    
+    <!-- 리그신청을 했는지 -->
+    <select id="MatchSearch" resultType="java.lang.Integer" parameterType="java.lang.String">
+    	SELECT COUNT(*)
+        FROM LEAGUE_MATCH
+        WHERE LEADER_ID=#{id}
+    </select>
+    
+    <!-- 리그신청하기 -->
+    <insert id="MatchWrite" parameterType="com.boot.finalpro.league.model.LeagueMatchDTO">
+    	INSERT INTO LEAGUE_MATCH(SEQ, TEAM_NAME, LEADER_ID)
+    	VALUES(LEAGUE_MATCH_SEQ.NEXTVAL, #{team_name}, #{leader_id})
+    </insert>
+    
+    <!-- 팀정보 가져오기 -->
+    <select id="TeamSearch" resultType="com.boot.finalpro.team.model.TeamDTO" parameterType="java.lang.String">
+    	SELECT * 
+    	FROM TEAM
+    	WHERE LEADER=#{id}
+    </select>
+    
+    <!-- 게임정보가져오기 -->
+    <select id="GameSearch" resultType="com.boot.finalpro.game.model.GameDTO" parameterType="java.lang.String">
+    	SELECT * 
+    	FROM GAME
+    	WHERE LEAGUE=#{league}    
+    </select>
+    
+    <!-- 리그결과에따라 업데이트하기 -->
+    <update id="leagueUpdate1" parameterType="com.boot.finalpro.game.model.GameDTO">
+    	UPDATE GAME 
+		SET NAME_TEAM1=#{game_result}
+    	WHERE LEAGUE=#{league}
+    </update>
+    
+    <!-- 리그결과에따라 업데이트하기 -->
+    <update id="leagueUpdate2" parameterType="com.boot.finalpro.game.model.GameDTO">
+    	UPDATE GAME 
+		SET NAME_TEAM2=#{game_result}
+    	WHERE LEAGUE=#{league}
+    </update>
+    
+    <!-- 모든 리그가 완료되었을때 업데이트 -->
+    <update id="leagueEnd" parameterType="java.lang.String">
+		<![CDATA[
+    	UPDATE GAME 
+    	SET LEAGUE=#{yyyymm} 
+    	WHERE LENGTH(LEAGUE) < 3
+    	]]> 
+    </update>
+    
+    <!-- 팀장권한인지 체크 -->
+    <select id="AuthSearch" resultType="com.boot.finalpro.member.model.AuthoritiesDTO" parameterType="java.lang.String">
+    	SELECT *
+    	FROM AUTHORITIES
+    	WHERE ID=#{id}
+    </select>
+    
+    <!-- 신청취소하기 -->
+    <delete id="LeagueCancel" parameterType="java.lang.String">
+    	DELETE FROM LEAGUE_MATCH WHERE LEADER_ID=#{id}
+    </delete>
+    
+    <!-- 팀채팅방들어가기전 팀에 소속되어있는지 체크 -->
+   <select id="ChatTeamCheck" resultType="com.boot.finalpro.team.model.TeamDTO" parameterType="java.lang.String">
+   		SELECT * 
+    	FROM TEAM
+    	WHERE LEADER=#{id} OR MEMBER=#{id}
+   </select>
+   
+   <!-- 채팅금지인지 검색하기 -->
+   <select id="NoChatSearch" resultType="com.boot.finalpro.league.model.NoChatDTO" parameterType="java.lang.String">
+   		SELECT * 
+   		FROM NO_CHAT
+   		WHERE ID=#{id}
+   </select>
+   
+   <!-- 처음채팅금지 처음 먹은사람 데이터입력해주기 -->
+   <insert id="NoChatWrite" parameterType="com.boot.finalpro.league.model.NoChatDTO">
+   		INSERT INTO NO_CHAT(ID, NOW_STATUS, NO_COUNT)
+    	VALUES(#{id}, 1, 1)
+   </insert>
+   
+   <!-- 채팅금지 2번 이상인사람 상태 업데이트 해주기 -->
+   <update id="NoChatUpdate" parameterType="com.boot.finalpro.league.model.NoChatDTO">
+    	UPDATE NO_CHAT 
+    	SET NOW_STATUS=1, NO_COUNT=NO_COUNT+1
+    	WHERE ID=#{id}
+   </update>
+   
+   <!-- 채팅금지 2번 이상인사람 상태 업데이트 해주기 -->
+   <update id="NoChatEnd" parameterType="com.boot.finalpro.league.model.NoChatDTO">
+    	UPDATE NO_CHAT 
+    	SET NOW_STATUS=0
+    	WHERE ID=#{id}
+   </update>
+   
+   
+</mapper>

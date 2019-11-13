@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="member">
+	<!-- security -->
+	<resultMap type="com.boot.finalpro.member.model.SMS_MemberDTO" id="memberMap">
+		<id property="userid" column="userid"/>
+		<result property="userid" column="userid"/>
+		<result property="userpw" column="userpw"/>
+		<collection property="authList" resultMap="authMap">
+		</collection> 
+	</resultMap>
+	
+	<resultMap type="com.boot.finalpro.member.model.AuthoritiesDTO" id="authMap">
+		<result property="userid" column="userid"/>
+		<result property="authority" column="authority"/>
+	</resultMap>
+  	<!-- security user 접근 -->
+	<select id="getOneMemberByMemberId" resultMap="memberMap" parameterType="java.lang.String">
+		SELECT 
+		  mem.id as userid, pw as userpw, authority
+		FROM 
+		  SMS_MEM mem LEFT OUTER JOIN AUTHORITIES auth on mem.id = auth.id 
+		WHERE mem.id = #{userid} AND auth.authority!='ROLE_DELETE'
+ 	</select>
+	<!-- 비밀번호 변경 -->
+	<update id="updatePwd" parameterType="com.boot.finalpro.member.model.MemberDTO">
+		UPDATE SMS_MEM
+		SET PW=#{pwd}
+		WHERE ID=#{id}
+	</update>
+	<!-- 아이디 체크 -->
+	<select id="idCheck" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM MEMBER
+		WHERE ID=#{id}	
+	</select>
+
+<!-- <select id="getLoginByMember" parameterType="com.boot.finalpro.model.MemberDTO" resultType="com.boot.finalpro.model.MemberDTO">
+		SELECT * FROM MEMBER
+		WHERE ID=#{id} AND PWD=#{pwd} AND AUTH IN (1, 0)
+	</select> -->
+ 	<!-- 회원가입 멤버 -->
+	<insert id="saveMember" parameterType="com.boot.finalpro.member.model.MemberDTO">
+		INSERT INTO MEMBER(ID, NAME, ADDRESS, BIRTHDAY, PHONE, EMAIL, NOW_MONEY, TOTAL_MONEY, NOW_POINT, TOTAL_POINT, TEAM_NAME, HEIGHT, WEIGHT, REPORT_COUNT,  REGIDATE)
+		VALUES(#{id}, #{name}, #{address}, #{birthday}, #{phone}, #{email}, 0, 0, 0, 0, null, #{height}, #{weight}, 0, SYSDATE)
+	</insert>
+	<!-- 회원가입 시큐리티 멤버 -->
+	<insert id="saveSMSMember" parameterType="com.boot.finalpro.member.model.SMS_MemberDTO">
+		INSERT INTO SMS_MEM(SEQ, ID, PW, RDATE)
+		VALUES(SMS_MEM_SEQ.NEXTVAL, #{userid}, #{userpw}, sysdate)
+	</insert>
+	<!-- 회원가입 권한 -->
+	<insert id="saveAuth" parameterType="java.lang.String">
+		INSERT INTO AUTHORITIES(SEQ, ID, AUTHORITY)
+		VALUES(AUTHORITIES_SEQ.NEXTVAL, #{id}, 'ROLE_MEMBER')
+	</insert>
+	
+	<update id="WritePointPlus" parameterType="java.lang.String">
+      UPDATE MEMBER
+      SET NOW_POINT = NOW_POINT + 10, TOTAL_POINT = TOTAL_POINT + 10
+      WHERE ID=#{id}
+   </update>
+   <update id="CommentPointPlus" parameterType="java.lang.String">
+      UPDATE MEMBER
+      SET NOW_POINT = NOW_POINT + 5, TOTAL_POINT = TOTAL_POINT + 5
+      WHERE ID=#{id}
+   </update>
+   <update id="UploadPointPlus" parameterType="java.lang.String">
+      UPDATE MEMBER
+      SET NOW_POINT = NOW_POINT + 50, TOTAL_POINT = TOTAL_POINT + 50
+      WHERE ID=#{id}
+   </update>    
+      <update id="regiPointPlus" parameterType="java.lang.String">
+      UPDATE MEMBER
+      SET NOW_POINT = NOW_POINT + 500, TOTAL_POINT = TOTAL_POINT + 500
+      WHERE ID=#{id}
+   </update>
+
+    <update id="WritePointMinus" parameterType="java.lang.String">
+      UPDATE MEMBER
+      SET NOW_POINT = NOW_POINT - 10, TOTAL_POINT = TOTAL_POINT - 10
+      WHERE ID=#{id}
+   </update>
+   <update id="CommentPointMinus" parameterType="java.lang.String">
+      UPDATE MEMBER
+      SET NOW_POINT = NOW_POINT - 5, TOTAL_POINT = TOTAL_POINT - 5
+      WHERE ID=#{id}
+   </update>
+   <update id="UploadPointMinus" parameterType="java.lang.String">
+      UPDATE MEMBER
+      SET NOW_POINT = NOW_POINT - 50, TOTAL_POINT = TOTAL_POINT - 50
+      WHERE ID=#{id}
+   </update>
+    
+</mapper>

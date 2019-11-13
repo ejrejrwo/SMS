@@ -1,0 +1,84 @@
+@charset "UTF-8";
+
+#_topBar{
+	width: 98%;
+	height:auto;
+	padding: 0% 1% 0% 1%;
+	margin-top: 5%;
+}
+
+#_searchWrap{
+	width: 98%;
+	height: auto;
+	margin-top:5%;
+	padding: 1% 1% 1% 1%;
+	border: 1px solid graytext;
+}
+
+#_datepickTo,#_datepickFrom{
+	width: 100px;
+	height: 30px;
+	color: graytext;
+	text-align: center;
+	/* padding-left: 5px; */
+}
+
+#_selectBox{
+	height: 30px;
+}
+
+#_searchBar input{
+	font-size: 15px;
+	height: 30px;
+	padding-left: 5px;
+}
+
+#_findBtn{
+	height: 30px;
+}
+
+#_tableWrap{
+	width: 98%;
+	/* padding: 0% 1% 0% 1%; */
+	height: auto;
+	margin-top: 1%;
+}
+#_tableWrap table {
+	width: 100%;
+	border-collapse: collapse;
+}
+#_tableWrap tr{
+	height: 50px;
+}
+#_tableWrap th{
+	border-top: 3px solid gray;
+	border-bottom: 1px solid gray;
+	text-align:center;
+}
+
+#_tableWrap td{
+	text-align: center;
+	border-bottom: 1px solid gray;
+}
+
+#_pagingWrap{
+	width: 100%;
+	height: auto;
+	margin-top: 2%;
+	margin-bottom : 2%;
+	text-align: center;
+}
+#_pagingWrap a{
+	text-decoration: none;
+	color: graytext;
+}
+#_pagingWrap a:hover {
+	text-decoration: underline;
+}
+
+.notice_seq{
+	cursor: pointer;
+}
+.notice_list_tr:hover {
+	background-color: #fcf8e3;
+} 

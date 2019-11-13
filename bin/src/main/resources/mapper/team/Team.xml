@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="team">
+
+	<insert id="teamapplicationAf" parameterType="com.boot.finalpro.teambbs.model.TeamDetailDTO">
+		INSERT INTO TEAM_DETAIL(TEAM_NAME, LEADER, TITLE, CONTENT,
+		LIKE_COUNT, DEADLINE,
+		SOCCER_MMR, BASKETBALL_MMR, BASEBALL_MMR, BADMINTON_MMR, PINGPONG_MMR,
+		REPORT_COUNT, FDATE, SPORT_CATEGORY, FILE_NAME)
+		VALUES(#{team_name},#{leader}, #{title}, #{content},
+		0, 0, 1000, 1000, 1000, 1000, 1000, 0, SYSDATE, #{sport_category}, 
+		<if test="file_name == null">
+		null
+		</if>
+		<if test="file_name != null">
+		#{file_name}
+		</if>
+		)
+	</insert>
+
+	<select id="teamlist" parameterType="com.boot.finalpro.teambbs.model.TeamDetailParam" resultType="com.boot.finalpro.teambbs.model.TeamDetailDTO">
+		SELECT TEAM_NAME, LEADER, TITLE, CONTENT,
+		LIKE_COUNT, DEADLINE,
+		SOCCER_MMR, BASKETBALL_MMR, BASEBALL_MMR, BADMINTON_MMR, PINGPONG_MMR,
+		REPORT_COUNT, FDATE, SPORT_CATEGORY, FILE_NAME
+		FROM (SELECT ROW_NUMBER()OVER(ORDER BY FDATE DESC) AS RNUM,
+		TEAM_NAME, LEADER, TITLE, CONTENT,
+		LIKE_COUNT, DEADLINE,
+		SOCCER_MMR, BASKETBALL_MMR, BASEBALL_MMR, BADMINTON_MMR, PINGPONG_MMR,
+		REPORT_COUNT, FDATE, SPORT_CATEGORY, FILE_NAME
+		FROM TEAM_DETAIL
+		WHERE 1=1
+		<if test="sport_category != null and sport_category != ''">
+			AND SPORT_CATEGORY LIKE #{sport_category}
+		</if>
+		<if test="s_category != null and s_category != '' 
+		and s_keyword != null and s_keyword != ''">
+			<if test="s_category == 'team_name'">
+				AND TEAM_NAME LIKE '%'||#{s_keyword}||'%'
+			</if>
+			<if test="s_category == 'leader'">
+				AND LEADER LIKE '%'||#{s_keyword}||'%'
+			</if>
+			<if test="s_category == 'title'">
+				AND TITLE LIKE '%'||#{s_keyword}||'%'
+			</if>
+		</if>
+		)
+		WHERE RNUM BETWEEN #{start} AND #{end}
+	</select>
+	
+	<select id="teamlistCount" parameterType="com.boot.finalpro.teambbs.model.TeamDetailParam" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0) AS CNT
+		FROM TEAM_DETAIL
+		WHERE 1=1
+		<if test="sport_category != null and sport_category != ''">
+			AND SPORT_CATEGORY LIKE #{sport_category}
+		</if>
+		<if test="s_category != null and s_category != '' 
+		and s_keyword != null and s_keyword != ''">
+			<if test="s_category == 'team_name'">
+				AND TEAM_NAME LIKE '%'||#{s_keyword}||'%'
+			</if>
+			<if test="s_category == 'leader'">
+				AND LEADER LIKE '%'||#{s_keyword}||'%'
+			</if>
+			<if test="s_category == 'title'">
+				AND TITLE LIKE '%'||#{s_keyword}||'%'
+			</if>
+		</if>
+	</select>
+	
+	<update id="teamappmemup" parameterType="com.boot.finalpro.teambbs.model.TeamDetailDTO">
+		UPDATE MEMBER
+		SET TEAM_NAME=#{team_name}
+		WHERE ID=#{leader}
+	</update>
+	
+	<update id="teamappauthup" parameterType="com.boot.finalpro.teambbs.model.TeamDetailDTO">
+		UPDATE AUTHORITIES
+		SET AUTHORITY='ROLE_TEAMLEADER'
+		WHERE ID=#{leader}
+	</update>
+	
+	<update id="authteamup" parameterType="com.boot.finalpro.teambbs.model.TeamDetailDTO">
+		UPDATE AUTHORITIES
+		SET AUTHORITY='ROLE_TEAMMEMBER'
+		WHERE ID=#{id}
+	</update>
+	
+	
+	
+	<insert id="teamappleader" parameterType="com.boot.finalpro.teambbs.model.TeamDetailDTO">
+		INSERT INTO TEAM(TEAM_NAME, LEADER, MEMBER, MERCENARY)
+		VALUES(#{team_name}, #{leader}, null, null)
+	</insert>
+	
+	
+	<select id="teamdetail" resultType="com.boot.finalpro.teambbs.model.TeamDetailDTO" parameterType="com.boot.finalpro.teambbs.model.TeamDetailDTO">
+		SELECT TEAM_NAME, LEADER, TITLE, CONTENT,
+		LIKE_COUNT, DEADLINE,
+		SOCCER_MMR, BASKETBALL_MMR, BASEBALL_MMR, BADMINTON_MMR, PINGPONG_MMR,
+		REPORT_COUNT, FDATE, SPORT_CATEGORY, FILE_NAME
+		FROM TEAM_DETAIL
+		WHERE TEAM_NAME=#{team_name}
+	
+	</select>
+	
+	<select id="memcount" parameterType="com.boot.finalpro.teambbs.model.TeamDetailDTO" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM TEAM
+		WHERE TEAM_NAME=#{team_name}
+	</select>
+	
+	<insert id="memberapplication" parameterType="com.boot.finalpro.team.model.TeamApplicationDTO">
+		INSERT INTO TEAM_APPLICATION(SEQ, ID, TEAM_NAME, CONTENT)
+		VALUES(TEAM_APPLICATION_SEQ.NEXTVAL, #{id}, #{team_name}, #{content})
+	</insert>
+	
+	<select id="memappstate" parameterType="com.boot.finalpro.team.model.TeamApplicationDTO" resultType="com.boot.finalpro.team.model.TeamApplicationDTO">
+		SELECT SEQ, ID, TEAM_NAME, CONTENT
+		FROM TEAM_APPLICATION
+		WHERE TEAM_NAME=#{team_name}
+	</select>
+	
+	<insert id="teamaccept" parameterType="com.boot.finalpro.team.model.TeamApplicationDTO">
+		INSERT INTO TEAM(TEAM_NAME, MEMBER, MERCENARY)
+		VALUES(#{team_name}, #{id}, null)
+	</insert>
+	
+	<delete id="teamappdel" parameterType="com.boot.finalpro.team.model.TeamApplicationDTO">
+		DELETE FROM TEAM_APPLICATION
+		WHERE ID=#{id}
+	</delete>
+	
+	<delete id="teamrejdel" parameterType="com.boot.finalpro.team.model.TeamApplicationDTO">
+		DELETE FROM TEAM_APPLICATION
+		WHERE ID=#{id} AND TEAM_NAME=#{team_name}
+	</delete>
+	
+	<update id="memteamup" parameterType="com.boot.finalpro.team.model.TeamApplicationDTO">
+		UPDATE MEMBER
+		SET TEAM_NAME=#{team_name}
+		WHERE ID=#{id}
+	</update>
+	
+	
+	
+	<select id="getgamelist" parameterType="com.boot.finalpro.team.model.TeamGameParam" resultType="com.boot.finalpro.game.model.GameDTO">
+		SELECT SEQ_GAME, CATEGORY, NAME_TEAM1, NAME_TEAM2, GDATE, NAME_STADIUM, TITLE, CONTENT, DEL, PAYOUT_R1, PAYOUT_R2,
+		SCORE1, SCORE2, GAME_RESULT, LEAGUE, READ_COUNT, WDATE
+		FROM (SELECT ROW_NUMBER()OVER(ORDER BY SEQ_GAME DESC) AS RNUM,
+				SEQ_GAME, CATEGORY, NAME_TEAM1, NAME_TEAM2, GDATE, NAME_STADIUM, TITLE, CONTENT, DEL,
+				PAYOUT_R1, PAYOUT_R2, SCORE1, SCORE2, GAME_RESULT, LEAGUE, READ_COUNT, WDATE
+				FROM GAME
+		WHERE DEL=0 AND 
+		(NAME_TEAM1=#{name_team1} OR NAME_TEAM2=#{name_team1}) 
+		<if test="sport != null and sport != ''">
+			AND CATEGORY LIKE #{sport}
+		</if>
+		<if test="game_result != null and game_result != ''">
+			<if test="game_result == '승리한경기'">
+				AND GAME_RESULT LIKE #{name_team1}
+			</if>
+			<if test="game_result == '패배한경기'">
+				AND GAME_RESULT NOT LIKE #{name_team1}
+			</if>
+			<if test="game_result == '경기전'">
+				AND GAME_RESULT IS NULL
+			</if>
+		</if>
+		<if test="league != null and league != ''">
+			<if test="league == '일반게임'">
+				AND LEAGUE IS NULL
+			</if>
+			<if test="league == '리그경기'">
+				AND LEAGUE IS NOT NULL
+			</if>
+		</if>
+		ORDER BY SEQ_GAME DESC)
+		WHERE RNUM BETWEEN #{start} AND #{end}
+	</select>
+	
+	<select id="getgamelistCount" parameterType="com.boot.finalpro.team.model.TeamGameParam" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0) AS CNT
+		FROM GAME
+		WHERE DEL=0 AND 
+		(NAME_TEAM1=#{name_team1} OR NAME_TEAM2=#{name_team1}) 
+		<if test="sport != null and sport != ''">
+			AND CATEGORY LIKE #{sport}
+		</if>
+		<if test="game_result != null and game_result != ''">
+			<if test="game_result == '승리한경기'">
+				AND GAME_RESULT LIKE #{name_team1}
+			</if>
+			<if test="game_result == '패배한경기'">
+				AND GAME_RESULT NOT LIKE #{name_team1}
+			</if>
+			<if test="game_result == '경기전'">
+				AND GAME_RESULT IS NULL
+			</if>
+		</if>
+		<if test="league != null and league != ''">
+			<if test="league == '일반경기'">
+				AND LEAGUE IS NULL
+			</if>
+			<if test="league == '리그경기'">
+				AND LEAGUE IS NOT NULL
+			</if>
+		</if>
+	</select>
+	
+	<select id="getmatchinglist" parameterType="com.boot.finalpro.game.model.GameDTO" resultType="com.boot.finalpro.game.model.GameMatchDTO">
+		SELECT SEQ_GAMEMATCH, SEQ_GAME, ID, NAME_TEAM2, MESSAGE, WDATE
+		FROM GAME_MATCH
+		WHERE SEQ_GAME=#{seq_game}
+	</select>
+	
+	<update id="gameup" parameterType="com.boot.finalpro.game.model.GameMatchDTO">
+		UPDATE GAME
+		SET NAME_TEAM2=#{name_team2}
+		WHERE SEQ_GAME=#{seq_game}
+	</update>
+	
+	<delete id="matchdel" parameterType="com.boot.finalpro.game.model.GameMatchDTO">
+		DELETE FROM GAME_MATCH
+		WHERE SEQ_GAME=#{seq_game}
+	</delete>
+	
+	<!-- 매치 거절 -->
+	<delete id="matchreject" parameterType="com.boot.finalpro.game.model.GameMatchDTO">
+		DELETE FROM GAME_MATCH
+		WHERE SEQ_GAMEMATCH=#{seq_gamematch}
+	</delete>
+	
+	<!-- 멤버 현황 셀렉 -->
+	<select id="memberstate" parameterType="com.boot.finalpro.team.model.TeamMemberParam" resultType="com.boot.finalpro.member.model.MemberDTO">
+		<!-- SELECT ID, NAME, ADDRESS, BIRTHDAY, PHONE, EMAIL, NOW_MONEY,
+		TOTAL_MONEY, HEIGHT, WEIGHT, REPORT_COUNT, REGIDATE, TEAM_NAME
+		FROM MEMBER
+		WHERE TEAM_NAME=#{team_name} -->
+		
+		SELECT ID, NAME, ADDRESS, BIRTHDAY, PHONE, EMAIL, NOW_MONEY,
+		TOTAL_MONEY, HEIGHT, WEIGHT, REPORT_COUNT, REGIDATE, TEAM_NAME
+		FROM (SELECT ROW_NUMBER()OVER(ORDER BY BIRTHDAY DESC) AS RNUM,
+			ID, NAME, ADDRESS, BIRTHDAY, PHONE, EMAIL, NOW_MONEY,
+			TOTAL_MONEY, HEIGHT, WEIGHT, REPORT_COUNT, REGIDATE, TEAM_NAME
+			FROM MEMBER
+			WHERE TEAM_NAME=#{team_name}
+			ORDER BY BIRTHDAY)
+			WHERE RNUM <![CDATA[ >= ]]> #{start} AND RNUM <![CDATA[ <= ]]> #{end}
+	</select>
+	
+	<select id="memberstateCount" parameterType="com.boot.finalpro.team.model.TeamMemberParam" resultType="java.lang.Integer">
+		SELECT NVL(COUNT(*), 0) AS CNT
+		FROM MEMBER
+		WHERE TEAM_NAME=#{team_name}
+	</select>
+	
+	<!-- 팀 탈퇴 시키기 -->
+	<delete id="teamoutdel" parameterType="com.boot.finalpro.member.model.MemberDTO">
+		DELETE FROM TEAM
+		WHERE MEMBER=#{id}
+	</delete>
+	<!-- 팀 탈퇴 시키기 -->
+	<update id="teamoutup" parameterType="com.boot.finalpro.member.model.MemberDTO">
+		UPDATE MEMBER
+		SET TEAM_NAME=null
+		WHERE ID=#{id}
+	</update>
+	<!-- 팀 탈퇴 시키기 -->
+	<update id="authoutup" parameterType="com.boot.finalpro.teambbs.model.TeamDetailDTO">
+		UPDATE AUTHORITIES
+		SET AUTHORITY='ROLE_MEMBER'
+		WHERE ID=#{id}
+	</update>
+	
+	<update id="teamupAf" parameterType="com.boot.finalpro.teambbs.model.TeamDetailParam">
+		UPDATE TEAM_DETAIL
+		SET TEAM_NAME=#{team_name}, TITLE=#{title}, CONTENT=#{content}, SPORT_CATEGORY=#{sport_category}
+		<if test="file_name != null">
+		,FILE_NAME=#{file_name}
+		</if>
+		WHERE TEAM_NAME=#{old_team_name}
+		
+	</update>
+	
+	<insert id="recruitmentAf" parameterType="com.boot.finalpro.teambbs.model.RecruitTeamDTO">
+		INSERT INTO RECRUIT_TEAM(SEQ, ID, TEAM_NAME, CONTENT, WDATE, DEL, READ_COUNT)
+		VALUES(RECRUIT_TEAM_SEQ.NEXTVAL, #{id}, #{team_name}, #{content}, SYSDATE, 0, 0)
+	</insert>
+	
+	<update id="recruitmentup" parameterType="com.boot.finalpro.teambbs.model.RecruitTeamDTO">
+		UPDATE TEAM_DETAIL
+		SET DEADLINE=1
+		WHERE TEAM_NAME=#{team_name}
+	</update>
+	
+	
+	<select id="recruitmentlist" resultType="com.boot.finalpro.teambbs.model.RecruitTeamDTO" parameterType="com.boot.finalpro.teambbs.model.RecruitTeamParam">
+		SELECT seq, id, team_name, content, wdate, sport_category
+		FROM (SELECT ROW_NUMBER()OVER(ORDER BY RECRUIT_TEAM.SEQ DESC) AS RNUM, 
+		RECRUIT_TEAM.SEQ AS seq, RECRUIT_TEAM.ID AS id,
+		RECRUIT_TEAM.TEAM_NAME AS team_name, RECRUIT_TEAM.CONTENT AS content, 
+		RECRUIT_TEAM.WDATE AS wdate, TEAM_DETAIL.SPORT_CATEGORY AS sport_category
+		FROM RECRUIT_TEAM, TEAM_DETAIL
+		WHERE RECRUIT_TEAM.TEAM_NAME = TEAM_DETAIL.TEAM_NAME
+		<if test="sport_category != null and sport_category != ''">
+			AND TEAM_DETAIL.SPORT_CATEGORY LIKE #{sport_category}
+		</if>
+		ORDER BY RECRUIT_TEAM.SEQ DESC)
+		WHERE RNUM <![CDATA[ >= ]]> #{start} AND RNUM <![CDATA[ <= ]]> #{end}
+	</select>
+	
+	<select id="recruitmencount" resultType="java.lang.Integer" parameterType="com.boot.finalpro.teambbs.model.RecruitTeamParam">
+		SELECT NVL(COUNT(*), 0) AS CNT
+		FROM RECRUIT_TEAM, TEAM_DETAIL 
+		WHERE RECRUIT_TEAM.TEAM_NAME = TEAM_DETAIL.TEAM_NAME
+		<if test="sport_category != null and sport_category != ''">
+			AND TEAM_DETAIL.SPORT_CATEGORY LIKE #{sport_category}
+		</if>
+	</select>
+	
+	<!-- 팀원 모집 마감 -->
+	<update id="deadlineup" parameterType="java.lang.String">
+		UPDATE TEAM_DETAIL
+		SET DEADLINE=0
+		WHERE TEAM_NAME=#{team_name}
+	</update>
+	<!-- 팀원 모집 마감 -->
+	<delete id="deadlinedel" parameterType="java.lang.String">
+		DELETE FROM RECRUIT_TEAM
+		WHERE TEAM_NAME=#{team_name}
+	</delete>
+	<!-- 팀원 모집 마감 -->
+	<delete id="deadlineAppDel" parameterType="java.lang.String">
+		DELETE FROM TEAM_APPLICATION
+		WHERE TEAM_NAME=#{team_name}
+	</delete>
+	
+	
+	<insert id="appmsg" parameterType="com.boot.finalpro.mypage.model.MessageDTO">
+       INSERT INTO MESSAGE(SEQ, SEND_ID, RECEIVE_ID, CONTENT, READING, WDATE, SEND_DEL, RECEIVE_DEL)
+       VALUES(MESSAGE_SEQ.NEXTVAL, #{send_id}, #{receive_id}, #{content}, 1, SYSDATE, 0, 0)
+    </insert>
+    
+    <select id="get_tname" parameterType="java.lang.String" resultType="java.lang.Integer">
+    	SELECT NVL(COUNT(*), 0)
+		FROM TEAM_DETAIL
+		WHERE TEAM_NAME=#{team_name}
+    </select>
+    
+    <update id="tdel_member" parameterType="java.lang.String">
+    	UPDATE MEMBER
+    	SET TEAM_NAME=null
+    	WHERE TEAM_NAME=#{team_name}
+    </update>
+    
+    <delete id="tdel_team" parameterType="java.lang.String">
+    	DELETE FROM TEAM
+		WHERE TEAM_NAME=#{team_name}    	
+    </delete>
+    
+    <delete id="tdel_teamdet" parameterType="java.lang.String">
+    	DELETE FROM TEAM_DETAIL
+    	WHERE TEAM_NAME=#{team_name}
+    </delete>
+    
+    <delete id="tdel_teamapp" parameterType="java.lang.String">
+    	DELETE FROM TEAM_APPLICATION
+    	WHERE TEAM_NAME=#{team_name}
+    </delete>
+    
+    <delete id="tdel_recteam" parameterType="java.lang.String">
+    	DELETE FROM RECRUIT_TEAM
+    	WHERE TEAM_NAME=#{team_name}
+    </delete>
+    
+    <delete id="tdel_teambbs" parameterType="java.lang.String">
+    	DELETE FROM TEAM_BBS
+    	WHERE TEAM_NAME=#{team_name}
+    </delete>
+    
+    <delete id="tdel_gmat" parameterType="java.lang.String">
+    	DELETE FROM GAME_MATCH
+    	WHERE NAME_TEAM2=#{team_name}
+    </delete>
+    
+    <select id="tdel_check" parameterType="java.lang.String" resultType="java.lang.Integer">
+    	SELECT NVL(COUNT(*), 0)
+    	FROM GAME
+    	WHERE (NAME_TEAM1=#{team_name}
+    	OR NAME_TEAM2=#{team_name})
+    	AND GAME_RESULT IS NULL 
+    </select>
+    
+    <update id="tdel_auth" parameterType="java.lang.String">
+    	UPDATE AUTHORITIES
+    	SET AUTHORITY='ROLE_ADMIN'
+    	WHERE ID=#{id}
+    </update>
+    
+    <select id="tdel_getid" parameterType="java.lang.String" resultType="java.lang.String">
+    	SELECT ID FROM MEMBER
+    	WHERE TEAM_NAME=#{team_name}
+    </select>
+    
+    <select id="getMemberById" parameterType="java.lang.String" resultType="com.boot.finalpro.member.model.MemberDTO">
+		SELECT * FROM MEMBER
+		WHERE ID=#{id}
+	</select>
+	
+	<select id="getAuth" parameterType="java.lang.String" resultType="com.boot.finalpro.member.model.AuthoritiesDTO">
+	    SELECT * FROM AUTHORITIES
+	    WHERE ID=#{id}
+   </select>
+    
+   <select id="getTeamcount" parameterType="java.lang.String" resultType="java.lang.String">
+   		SELECT TEAM_NAME FROM MEMBER
+		WHERE ID=#{id}
+   </select> 
+   
+   <select id="getAppCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+   		SELECT NVL(COUNT(*), 0)
+   		FROM TEAM_APPLICATION
+   		WHERE ID=#{id}
+   </select>
+   
+   <select id="TeamAppCount" parameterType="com.boot.finalpro.teambbs.model.TeamDetailParam" resultType="java.lang.Integer">
+   		SELECT NVL(COUNT(*), 0)
+   		FROM TEAM_APPLICATION
+   		WHERE ID=#{id} AND TEAM_NAME=#{team_name}
+   </select>
+   
+      <!-- 팀 좋아요 횟수 증가 -->
+   <update id="TeamLikePlus" parameterType="java.lang.String">
+   		UPDATE TEAM_DETAIL
+   		SET LIKE_COUNT = LIKE_COUNT + 1
+   		WHERE TEAM_NAME=#{team_name}
+   </update>
+   
+   <update id="TeamLikeDel" parameterType="com.boot.finalpro.teambbs.model.OverlapDTO">
+      	UPDATE TEAM_DETAIL
+   		SET LIKE_COUNT = LIKE_COUNT - 1
+   		WHERE TEAM_NAME=#{team_name}
+   </update>
+   
+   <!-- 팀 좋아요 중복 막기 추가 -->
+   <insert id="TeamLikeOverlap" parameterType="com.boot.finalpro.teambbs.model.OverlapDTO">
+   		INSERT INTO OVERLAP(SEQ, ID, TEAM_LIKE)
+   		VALUES(OVERLAP_SEQ.NEXTVAL, #{id}, #{team_name})
+   </insert>
+   
+   <!-- 팀 좋아요 중복 막기 삭제 -->
+   <delete id="TeamLikeOverlapDel" parameterType="com.boot.finalpro.teambbs.model.OverlapDTO">
+   		DELETE OVERLAP
+   		WHERE ID=#{id} AND TEAM_LIKE=#{team_name}
+   </delete>
+   
+   <!-- 팀 좋아요 중복 가져오기 -->
+   <select id="TeamLikePickId" parameterType="com.boot.finalpro.teambbs.model.OverlapDTO" resultType="com.boot.finalpro.teambbs.model.OverlapDTO">
+	   	SELECT SEQ, ID, TEAM_LIKE
+	   	FROM OVERLAP
+	   	WHERE TEAM_LIKE=#{team_name} AND ID=#{id}
+	   	
+   </select>
+   
+   <!-- 팀 신고 횟수 증가-->
+   <update id="TeamReportPlus" parameterType="java.lang.String">
+   		UPDATE TEAM_DETAIL
+   		SET REPORT_COUNT = REPORT_COUNT + 1
+   		WHERE TEAM_NAME=#{team_name}
+   </update>
+   
+   <!-- 팀 신고 중복 막기 추가-->
+   <insert id="TeamReportOverlap" parameterType="com.boot.finalpro.teambbs.model.OverlapDTO">
+   		INSERT INTO OVERLAP(SEQ, ID, TEAM_REPORT)
+   		VALUES(OVERLAP_SEQ.NEXTVAL, #{id}, #{team_name})
+   </insert>
+   
+   <!-- 팀 신고 중복 가져오기 -->
+   <select id="TeamReportPickId" parameterType="com.boot.finalpro.teambbs.model.OverlapDTO" resultType="com.boot.finalpro.teambbs.model.OverlapDTO">
+   		SELECT SEQ, ID, TEAM_REPORT
+   		FROM OVERLAP
+   		WHERE TEAM_REPORT=#{team_name} AND ID=#{id}
+   </select>
+   
+   <!-- 팀 신고 내용 관리자 보내기 -->
+   <insert id="TeamReportSend" parameterType="com.boot.finalpro.team.model.ReportTeamDTO">
+   		INSERT INTO REPORT_TEAM(SEQ, ID, CONTENT, PARENT)
+   		VALUES(REPORT_TEAM_SEQ.NEXTVAL, #{id}, #{content}, #{team_name})
+   </insert>
+   
+   <!-- 팀 신고 내용 관리자 가져오기 -->
+   <select id="GetTeamReportList" parameterType="java.lang.String" resultType="com.boot.finalpro.team.model.ReportTeamDTO">
+   		SELECT SEQ, ID, CONTENT, PARENT
+   		FROM REPORT_TEAM
+   		WHERE PARENT=#{team_name}
+   </select>
+   
+   <!-- 팀탈퇴시 AUTHORITIES 업데이트 -->
+   <update id="TeamSecessionUpAuth" parameterType="java.lang.String">
+   		UPDATE AUTHORITIES
+   		SET AUTHORITY='ROLE_MEMBER'
+   		WHERE ID=#{id}
+   </update>
+   
+   <!-- 팀탈퇴시 MEMBER 업데이트 -->
+   <update id="TeamSecessionUpMem" parameterType="java.lang.String">
+   		UPDATE MEMBER
+   		SET TEAM_NAME=NULL
+   		WHERE ID=#{id}
+   </update>
+   
+   <select id="TeamAppcheck" resultType="java.lang.Integer" parameterType="com.boot.finalpro.teambbs.model.TeamDetailParam">
+		SELECT NVL(COUNT(*), 0)
+		FROM TEAM_APPLICATION
+		WHERE ID=#{id}
+		AND TEAM_NAME=#{team_name}
+   </select>
+   
+   <!-- 팀탈퇴시 TEAM 삭제 -->
+   <delete id="TeamSecessionDel" parameterType="java.lang.String">
+   		DELETE FROM TEAM
+   		WHERE MEMBER=#{id}
+   </delete>
+   
+   
+</mapper>

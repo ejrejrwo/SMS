@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+
+	 <!-- myPage main -->
+   <definition name="myPageMain.tiles" template="/WEB-INF/views/myPage/layout/myPageTemplate.jsp">
+		<put-attribute name="myPage_import" value="/WEB-INF/views/myPage/common/myPageImport.jsp"/>
+		<put-attribute name="top_inc" value="/WEB-INF/views/common/top_inc.jsp"/>
+		<put-attribute name="top_menu" value="/WEB-INF/views/common/top_menu.jsp"/>
+		<put-attribute name="my_top_menu" value="/WEB-INF/views/myPage/common/myPageTopMenu.jsp"/>
+		<put-attribute name="my_left_menu" value="/WEB-INF/views/myPage/common/myPageLeftMenu.jsp"/>
+		<put-attribute name="body" value="/WEB-INF/views/myPage/pay/myPagePay.jsp" />
+		<put-attribute name="footer" value="/WEB-INF/views/common/footer.jsp" />
+	</definition>
+	
+	<!-- pay -->   
+	<definition name="payPage.tiles" extends="myPageMain.tiles">
+			<put-attribute name="body" value="/WEB-INF/views/myPage/pay/myPagePay.jsp" />
+	</definition>
+	
+	<definition name="myPagePayPage.tiles" template="/WEB-INF/views/myPage/pay/myPagePayAf.jsp">
+	</definition>
+	
+	<!-- message -->
+	<definition name="myPageSendMessage.tiles" extends="myPageMain.tiles">
+			<put-attribute name="body" value="/WEB-INF/views/myPage/message/myPageSendMessage.jsp" />
+	</definition>
+	
+	<definition name="myPageSendMessageDetail.tiles" template="/WEB-INF/views/myPage/message/myPageSendMessageDetail.jsp">
+	</definition>
+	
+	 <definition name="myPageReceiveMessage.tiles" extends="myPageMain.tiles">
+			<put-attribute name="body" value="/WEB-INF/views/myPage/message/myPageReceiveMessage.jsp" />
+	</definition>
+	
+	<definition name="myPageReceiveMessageDetail.tiles" template="/WEB-INF/views/myPage/message/myPageReceiveMessageDetail.jsp">
+	</definition>
+	
+	<definition name="myPageWriteMessage.tiles" template="/WEB-INF/views/myPage/message/myPageWriteMessage.jsp">
+	</definition>
+	
+	<definition name="myPageAnswerMessage.tiles" template="/WEB-INF/views/myPage/message/myPageAnswerMessage.jsp">
+	</definition>
+	
+	<!-- info -->
+	<definition name="myPageInfo.tiles" extends="myPageMain.tiles">
+			<put-attribute name="body" value="/WEB-INF/views/myPage/info/myPageInfo.jsp" />
+	</definition>
+	
+	<!-- mypagebbs -->
+	<definition name="myBBS.tiles" extends="myPageMain.tiles">
+	 		<put-attribute name="body" value="/WEB-INF/views/myPage/list/myPageBBS.jsp" />
+	 </definition>
+	 
+	 <!-- mypagelike -->
+	<definition name="myLike.tiles" extends="myPageMain.tiles">
+			<put-attribute name="body" value="/WEB-INF/views/myPage/list/myPageLike.jsp" />
+	</definition>
+	
+	<!-- mypagebet -->
+	<definition name="myBet.tiles" extends="myPageMain.tiles">
+			<put-attribute name="body" value="/WEB-INF/views/myPage/list/myPageBet.jsp" />
+	</definition>
+	
+	  <!-- exchange -->
+	<definition name="exchange.tiles" extends="myPageMain.tiles">
+			<put-attribute name="body" value="/WEB-INF/views/myPage/exchange/myPageExchange.jsp" />
+	</definition>
+	
+	<definition name="exchangeInfo.tiles" extends="myPageMain.tiles">
+			<put-attribute name="body" value="/WEB-INF/views/myPage/exchange/myPageExchangeInfo.jsp" />
+	</definition>
+	
+	<!-- myPageInfo -->
+	 <definition name="myPayInfo.tiles" extends="myPageMain.tiles">
+			<put-attribute name="body" value="/WEB-INF/views/myPage/pay/myPagePayInfo.jsp" />
+	</definition>
+	
+	<!-- myPageTeamApp -->
+	 <definition name="myPageTeamAppInfo.tiles" extends="myPageMain.tiles">
+			<put-attribute name="body" value="/WEB-INF/views/myPage/list/myPageTeamAppInfo.jsp" />
+	</definition>
+
+</tiles-definitions>

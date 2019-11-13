@@ -1,0 +1,37 @@
+#project
+server:
+  port: 9091
+  #JSP config
+  servlet:
+    jsp:
+      init-parameters:
+        development: true
+#custume error page
+  error:
+    whitelabel:
+      enabled: false
+#db config
+spring:
+  mvc:
+    view:
+      prefix: /WEB-INF/views/
+      suffix: .jsp
+  datasource:
+    hikari:
+      jdbc-url: jdbc:oracle:thin:@localhost:1521/xe
+      pool-name: hikari-cp
+      maximum-pool-size: 30
+      minimum-idle: 2
+      driver-class-name: oracle.jdbc.OracleDriver
+      username: hr
+      password: hr
+      
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+      enabled: true
+#ehcache config
+cache:
+  ehcache:
+    config: classpath:config/ehcache.xml      

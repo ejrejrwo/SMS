@@ -1,0 +1,58 @@
+@charset "UTF-8";
+
+#_topBar{
+	width: 100%;
+	height:auto;
+	padding: 3% 0 3% 0;
+	text-align: center;
+	border-bottom: 3px solid black;
+	font-size: 40px;
+}
+#_topBar:after{
+	content: "";
+    display: block;
+    width: 50px;
+    border-bottom: 1px solid #bcbcbc;
+    margin: 5px auto;
+}
+
+#_tableWrap{
+	width: 100%;
+	height: auto;
+}
+
+#_tableWrap table{
+	width: 100%;
+	height: auto;
+	border-collapse: collapse;
+}
+#_tableWrap table th,#_tableWrap table td{
+	/* border: 1px solid graytext; */
+	font-size: 18px;
+}
+.writeTh div{
+	width: 100%;
+	border-right: 1px solid #DDD0D0;
+}
+.disk_img{
+	width: 20px;
+	height: 20px;
+}
+#_contentTd{
+	padding: 5% 0 5% 0;
+	border-bottom: 1px solid #DDD0D0;
+}
+#_btnTh{
+	text-align: center;
+}
+#_btnTh button{
+	width: 150px;
+	height: 50px;
+	border: 3px solid #1E90FF;
+	background-color: white;
+	color: #1E90FF;
+}
+#_btnTh button:hover {
+	background-color: #1E90FF;
+	color: white;
+}

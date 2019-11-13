@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="subbbs">
+
+	<select id="allBbsList2" parameterType="com.boot.finalpro.teambbs.model.TeamBBSParam"
+	resultType="com.boot.finalpro.teambbs.model.SubDTO">
+	SELECT SEQ, ID, TEAM_NAME, TITLE, GAME_INFO , CONTENT, SUBJECT_CATEGORY, WDATE
+	FROM (SELECT ROW_NUMBER()OVER (ORDER BY WDATE DESC) AS RNUM,
+	SEQ, ID, TEAM_NAME, TITLE, GAME_INFO, CONTENT, SUBJECT_CATEGORY, WDATE
+	FROM SUB_BBS
+	WHERE 1=1
+		 <if test="subject_category != null and subject_category !=''
+		 	and s_category != null and s_category != ''
+		 	and s_keyword != null and s_keyword != ''">
+		 	<if test="subject_category == 'guruka' and s_category == 'title'">
+		 		AND SUBJECT_CATEGORY LIKE '%'||#{sub_keyword}||'%'
+		 		AND TITLE LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 	<if test="subject_category == 'guruka' and s_category == 'contents'">
+		 		AND SUBJECT_CATEGORY LIKE '%'||#{sub_keyword}||'%'
+		 		AND CONTENT LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 	<if test="subject_category == 'guruka' and s_category == 'writer'">
+		 		AND SUBJECT_CATEGORY LIKE '%'||#{sub_keyword}||'%'
+		 		AND ID LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 </if>
+		 <if test="subject_category != null and subject_category !=''">
+		 	<if test="subject_category == 'guruka'">
+		 		AND SUBJECT_CATEGORY LIKE '%'||#{sub_keyword}||'%'
+		 	</if>
+		 </if>
+		 <if test="s_category != null and s_category != ''
+		 and s_keyword != null and s_keyword != ''">
+		 	<if test="s_category == 'title'">
+		 		AND TITLE LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 	<if test="s_category == 'contents'">
+		 		AND CONTENT LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 	<if test="s_category == 'writer'">
+		 		AND ID LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 </if>
+	) A
+	WHERE RNUM BETWEEN #{start} AND #{end}
+	</select>
+	
+	<select id="getBbsCount2" parameterType="com.boot.finalpro.teambbs.model.TeamBBSParam" 
+		resultType="java.lang.Integer">
+		<!-- NULL이 나올 경우를 막음 -->
+		SELECT NVL(COUNT(*), 0) AS CNT
+		FROM SUB_BBS
+		WHERE 1=1
+		 <if test="subject_category != null and subject_category !=''
+		 	and s_category != null and s_category != ''
+		 	and s_keyword != null and s_keyword != ''">
+		 	<if test="subject_category == 'guruka' and s_category == 'title'">
+		 		AND SUBJECT_CATEGORY LIKE '%'||#{sub_keyword}||'%'
+		 		AND TITLE LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 	<if test="subject_category == 'guruka' and s_category == 'contents'">
+		 		AND SUBJECT_CATEGORY LIKE '%'||#{sub_keyword}||'%'
+		 		AND CONTENT LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 	<if test="subject_category == 'guruka' and s_category == 'writer'">
+		 		AND SUBJECT_CATEGORY LIKE '%'||#{sub_keyword}||'%'
+		 		AND ID LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 </if>
+		 <if test="subject_category != null and subject_category !=''">
+		 	<if test="subject_category == 'guruka'">
+		 		AND SUBJECT_CATEGORY LIKE '%'||#{sub_keyword}||'%'
+		 	</if>
+		 </if>
+		 <if test="s_category != null and s_category != ''
+		 and s_keyword != null and s_keyword != ''">
+		 	<if test="s_category == 'title'">
+		 		AND TITLE LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 	<if test="s_category == 'contents'">
+		 		AND CONTENT LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 	<if test="s_category == 'writer'">
+		 		AND ID LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 </if>
+	</select>
+
+	<!-- 게시글 삭제하기 -->
+	<delete id="BbsDelete2" parameterType="java.lang.Integer">
+		DELETE
+		FROM SUB_BBS
+		WHERE
+		SEQ=#{seq}
+	</delete>
+
+	<!-- 게시글 작성하기 -->
+	<insert id="BbsWrite2"
+		parameterType="com.boot.finalpro.teambbs.model.SubDTO">
+		INSERT INTO SUB_BBS(SEQ, ID, TEAM_NAME, TITLE, GAME_INFO, CONTENT,
+		SUBJECT_CATEGORY, WDATE)
+		VALUES(SUB_BBS_SEQ.NEXTVAL, #{id}, #{team_name}, #{title}, #{game_info},
+		#{content}, #{subject_category}, SYSDATE)
+	</insert>
+
+	<!-- 게시글 수정하기 -->
+	<update id="BbsUpdate2"
+		parameterType="com.boot.finalpro.teambbs.model.SubDTO">
+		UPDATE SUB_BBS
+		SET TITLE=#{title}, CONTENT=#{content}, GAME_INFO=#{game_info},
+		SUBJECT_CATEGORY=#{subject_category}
+		WHERE SEQ=#{seq}
+	</update>
+	<!-- 게시글 상세 -->
+	<select id="BbsDetail2" parameterType="java.lang.Integer"
+		resultType="com.boot.finalpro.teambbs.model.SubDTO">
+		SELECT SEQ, ID, TEAM_NAME, TITLE, GAME_INFO, CONTENT, SUBJECT_CATEGORY, WDATE
+		FROM SUB_BBS
+		WHERE SEQ=#{seq}
+	</select>
+
+</mapper>

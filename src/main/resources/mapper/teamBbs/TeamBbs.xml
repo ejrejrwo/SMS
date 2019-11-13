@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="teambbs">
+
+	<select id="allBbsList" parameterType="com.boot.finalpro.teambbs.model.TeamBBSParam"
+	resultType="com.boot.finalpro.teambbs.model.TeamBBSDTO">
+	
+	SELECT SEQ, ID, TEAM_NAME, TITLE, CONTENT, LIKE_COUNT, REPORT_COUNT, SUBJECT_CATEGORY, READ_COUNT, WDATE, FILE_NAME, ORIGINAL_FILE_NAME
+	FROM(SELECT ROW_NUMBER()OVER(ORDER BY SEQ DESC) AS RNUM, 
+		 SEQ, ID, TEAM_NAME, TITLE, CONTENT, LIKE_COUNT, REPORT_COUNT,  SUBJECT_CATEGORY, READ_COUNT, WDATE, FILE_NAME, ORIGINAL_FILE_NAME
+		 FROM TEAM_BBS
+		 WHERE 1=1
+		 <if test="subject_category != null and subject_category !=''
+		 	and s_category != null and s_category != ''
+		 	and s_keyword != null and s_keyword != ''">
+		 	<if test="subject_category == 'subjectcategory' and s_category == 'title'">
+		 		AND SUBJECT_CATEGORY LIKE '%'||#{sub_keyword}||'%'
+		 		AND TITLE LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 	<if test="subject_category == 'subjectcategory' and s_category == 'contents'">
+		 		AND SUBJECT_CATEGORY LIKE '%'||#{sub_keyword}||'%'
+		 		AND CONTENT LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 	<if test="subject_category == 'subjectcategory' and s_category == 'writer'">
+		 		AND SUBJECT_CATEGORY LIKE '%'||#{sub_keyword}||'%'
+		 		AND ID LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 </if>
+		 <if test="subject_category != null and subject_category !=''">
+		 	<if test="subject_category == 'subjectcategory'">
+		 		AND SUBJECT_CATEGORY LIKE '%'||#{sub_keyword}||'%'
+		 	</if>
+		 </if>
+		 <if test="s_category != null and s_category != ''
+		 and s_keyword != null and s_keyword != ''">
+		 	<if test="s_category == 'title'">
+		 		AND TITLE LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 	<if test="s_category == 'contents'">
+		 		AND CONTENT LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 	<if test="s_category == 'writer'">
+		 		AND ID LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 </if>
+	<if test="team_name != null and team_name != ''">
+		AND TEAM_NAME=#{team_name}
+	</if>
+	) A
+	WHERE RNUM BETWEEN #{start} AND #{end}
+
+</select>
+
+<select id="getBbsCount" parameterType="com.boot.finalpro.teambbs.model.TeamBBSParam" 
+	resultType="java.lang.Integer">
+	<!-- NULL이 나올 경우를 막음 -->
+	SELECT NVL(COUNT(*), 0) AS CNT
+	FROM TEAM_BBS
+	WHERE 1=1
+		 <if test="subject_category != null and subject_category !=''
+		 	and s_category != null and s_category != ''
+		 	and s_keyword != null and s_keyword != ''">
+		 	<if test="subject_category == 'subjectcategory' and s_category == 'title'">
+		 		AND SUBJECT_CATEGORY LIKE '%'||#{sub_keyword}||'%'
+		 		AND TITLE LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 	<if test="subject_category == 'subjectcategory' and s_category == 'contents'">
+		 		AND SUBJECT_CATEGORY LIKE '%'||#{sub_keyword}||'%'
+		 		AND CONTENT LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 	<if test="subject_category == 'subjectcategory' and s_category == 'writer'">
+		 		AND SUBJECT_CATEGORY LIKE '%'||#{sub_keyword}||'%'
+		 		AND ID LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 </if>
+		 <if test="subject_category != null and subject_category !=''">
+		 	<if test="subject_category == 'subjectcategory'">
+		 		AND SUBJECT_CATEGORY LIKE '%'||#{sub_keyword}||'%'
+		 	</if>
+		 </if>
+		 <if test="s_category != null and s_category != ''
+		 and s_keyword != null and s_keyword != ''">
+		 	<if test="s_category == 'title'">
+		 		AND TITLE LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 	<if test="s_category == 'contents'">
+		 		AND CONTENT LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 	<if test="s_category == 'writer'">
+		 		AND ID LIKE '%'||#{s_keyword}||'%'
+		 	</if>
+		 </if>
+	<if test="team_name != null and team_name != ''">
+		AND TEAM_NAME=#{team_name}
+	</if>
+</select>
+
+	<!-- 게시글 작성하기 -->
+	<insert id="BbsWrite"
+		parameterType="com.boot.finalpro.teambbs.model.TeamBBSDTO">
+		INSERT INTO TEAM_BBS(SEQ, ID, TEAM_NAME, TITLE, CONTENT,
+		LIKE_COUNT,
+		REPORT_COUNT, SUBJECT_CATEGORY, READ_COUNT, WDATE)
+		VALUES(TEAM_BBS_SEQ.NEXTVAL, #{id}, #{team_name}, #{title},
+		#{content}, 0, 0, #{subject_category}, 0, SYSDATE)
+	</insert>
+
+	<select id="BbsDetail" parameterType="java.lang.Integer"
+		resultType="com.boot.finalpro.teambbs.model.TeamBBSDTO">
+		SELECT SEQ, B.ID, B.TEAM_NAME, TITLE, CONTENT, LIKE_COUNT,
+		B.REPORT_COUNT,
+		SUBJECT_CATEGORY, READ_COUNT, WDATE, FILE_NAME,
+		ORIGINAL_FILE_NAME,
+		M.HEIGHT, M.WEIGHT, M.EMAIL
+		FROM TEAM_BBS B, MEMBER	M
+		WHERE B.ID = M.ID AND SEQ=#{seq}
+	</select>
+
+	<!-- 게시글 삭제하기 -->
+	<delete id="BbsDelete" parameterType="java.lang.Integer">
+		DELETE
+		FROM TEAM_BBS
+		WHERE
+		SEQ=#{seq}
+	</delete>
+
+	<!-- 관리자 댓글 삭제 -->
+	<delete id="AdminCommentDelete"
+		parameterType="java.lang.Integer">
+		DELETE FROM TEAM_BBS_COMMENT
+		WHERE PARENT=#{seq}
+	</delete>
+
+	<!-- 게시글 수정하기 -->
+	<update id="BbsUpdate"
+		parameterType="com.boot.finalpro.teambbs.model.TeamBBSDTO">
+		UPDATE TEAM_BBS
+		SET TITLE=#{title}, CONTENT=#{content},
+		SUBJECT_CATEGORY=#{subject_category}
+		WHERE SEQ=#{seq}
+	</update>
+
+	<!-- 게시글 조회 수 -->
+	<update id="BbsReadCount" parameterType="java.lang.Integer">
+		UPDATE TEAM_BBS
+		SET
+		READ_COUNT=READ_COUNT+1
+		WHERE SEQ=#{seq}
+	</update>
+
+	<update id="BbsLikeCountAf" parameterType="java.lang.Integer">
+		UPDATE TEAM_BBS
+		SET
+		LIKE_COUNT=LIKE_COUNT+1
+		WHERE SEQ=#{seq}
+	</update>
+
+	<update id="BbsDisLike" parameterType="java.lang.Integer">
+		UPDATE TEAM_BBS
+		SET
+		LIKE_COUNT=LIKE_COUNT-1
+		WHERE SEQ=#{seq}
+	</update>
+
+	<update id="BbsReportCountAf" parameterType="java.lang.Integer">
+		UPDATE TEAM_BBS
+		SET
+		REPORT_COUNT=REPORT_COUNT+1
+		WHERE SEQ=#{seq}
+	</update>
+
+	<!-- 중복테이블 추가(좋아요, 신고수, 조회수) -->
+	<insert id="BbsLikeCount"
+		parameterType="com.boot.finalpro.teambbs.model.OverlapDTO">
+		INSERT INTO OVERLAP(SEQ, ID, BBS_LIKE)
+		VALUES(OVERLAP_SEQ.NEXTVAL, #{id}, #{seq})
+	</insert>
+
+	<insert id="BbsReportCount"
+		parameterType="com.boot.finalpro.teambbs.model.OverlapDTO">
+		INSERT INTO OVERLAP(SEQ, ID, BBS_REPORT)
+		VALUES(OVERLAP_SEQ.NEXTVAL, #{report_id}, #{seq})
+	</insert>
+
+	<insert id="BbsViewsCount"
+		parameterType="com.boot.finalpro.teambbs.model.OverlapDTO">
+		INSERT INTO OVERLAP(SEQ, ID, BBS_COUNT)
+		VALUES(OVERLAP_SEQ.NEXTVAL, #{id}, #{seq})
+	</insert>
+
+	<!-- 중복테이블 아이디 체크 -->
+	<select id="BbsLikePickId"
+		parameterType="com.boot.finalpro.teambbs.model.OverlapDTO"
+		resultType="com.boot.finalpro.teambbs.model.OverlapDTO">
+		SELECT SEQ, ID, BBS_LIKE
+		FROM OVERLAP
+		WHERE BBS_LIKE=#{seq}
+		AND ID=#{id}
+	</select>
+
+	<select id="BbsReportPickId"
+		parameterType="com.boot.finalpro.teambbs.model.OverlapDTO"
+		resultType="com.boot.finalpro.teambbs.model.OverlapDTO">
+		SELECT SEQ, ID, BBS_REPORT
+		FROM OVERLAP
+		WHERE
+		BBS_REPORT=#{seq} AND ID=#{id}
+	</select>
+
+	<select id="BbsViewsPickId"
+		parameterType="com.boot.finalpro.teambbs.model.OverlapDTO"
+		resultType="com.boot.finalpro.teambbs.model.OverlapDTO">
+		SELECT SEQ, ID, BBS_COUNT
+		FROM OVERLAP
+		WHERE BBS_COUNT=#{seq}
+		AND ID=#{id}
+	</select>
+
+	<!-- 중복테이블 삭제 -->
+	<delete id="BbsLikeDelete"
+		parameterType="com.boot.finalpro.teambbs.model.OverlapDTO">
+		DELETE FROM OVERLAP
+		WHERE BBS_LIKE=#{seq} AND ID=#{id}
+	</delete>
+
+	<!-- 게시판 신고 내용 관리자 보내기 -->
+	<insert id="BbsReportSend"
+		parameterType="com.boot.finalpro.teambbs.model.ReportBBSDTO">
+		INSERT INTO REPORT_BBS(SEQ, ID, CONTENT, PARENT)
+		VALUES(REPORT_BBS_SEQ.NEXTVAL, #{report_id}, #{content}, #{parent})
+	</insert>
+
+	<!-- 게시판 신고 내용 관리자 보기 -->
+	<select id="GetReportList" parameterType="java.lang.Integer"
+		resultType="com.boot.finalpro.teambbs.model.ReportBBSDTO">
+		SELECT SEQ, ID, CONTENT, PARENT
+		FROM REPORT_BBS
+		WHERE
+		PARENT=#{seq}
+	</select>
+
+   <!-- 이전글 -->
+   <select id="Previous" parameterType="com.boot.finalpro.teambbs.model.TeamBBSDTO"
+      resultType="com.boot.finalpro.teambbs.model.TeamBBSDTO">
+      SELECT *
+      FROM TEAM_BBS
+      WHERE SEQ IN(SELECT MAX(SEQ) FROM TEAM_BBS WHERE
+      SEQ <![CDATA[<]]>#{seq} AND TEAM_NAME=#{team_name})
+   </select>
+
+   <!-- 다음글 -->
+   <select id="Next" parameterType="com.boot.finalpro.teambbs.model.TeamBBSDTO"
+      resultType="com.boot.finalpro.teambbs.model.TeamBBSDTO">
+      SELECT *
+      FROM TEAM_BBS
+      WHERE SEQ IN(SELECT MIN(SEQ) FROM TEAM_BBS WHERE
+      SEQ <![CDATA[>]]>#{seq} AND TEAM_NAME=#{team_name})
+   </select>
+
+	<!-- 멤버 팀네임 가져오기 -->
+	<select id="getTeamName" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		SELECT TEAM_NAME
+		FROM MEMBER
+		WHERE ID=#{id}
+	</select>
+
+	<select id="teamlist"
+		parameterType="com.boot.finalpro.teambbs.model.TeamDetailParam"
+		resultType="com.boot.finalpro.teambbs.model.TeamDetailDTO">
+		SELECT TEAM_NAME, LEADER, TITLE, CONTENT, LIKE_COUNT, DEADLINE,
+		SOCCER_MMR, BASKETBALL_MMR, BASEBALL_MMR, BADMINTON_MMR, PINGPONG_MMR,
+		REPORT_COUNT, FDATE, SPORT_CATEGORY, FILE_NAME
+		FROM ( SELECT
+		ROW_NUMBER()OVER(ORDER BY FDATE DESC) AS RNUM,
+		TEAM_NAME, LEADER,
+		TITLE, CONTENT, LIKE_COUNT, DEADLINE, SOCCER_MMR, BASKETBALL_MMR,
+		BASEBALL_MMR, BADMINTON_MMR, PINGPONG_MMR, REPORT_COUNT, FDATE,
+		SPORT_CATEGORY, FILE_NAME
+		FROM TEAM_DETAIL
+		WHERE 1=1
+		<if
+			test="s_category != null and s_category != ''
+		 and s_keyword != null and s_keyword != ''">
+			<if test="s_category == 'team_name'">
+				AND TEAM_NAME LIKE '%'||#{s_keyword}||'%'
+			</if>
+			<if test="s_category == 'leader'">
+				AND LEADER LIKE '%'||#{s_keyword}||'%'
+			</if>
+			<if test="s_category == 'title'">
+				AND TITLE LIKE '%'||#{s_keyword}||'%'
+			</if>
+		</if>
+		) A
+		WHERE RNUM BETWEEN #{start} AND #{end}
+	</select>
+
+	<select id="teamlistCount" resultType="java.lang.Integer"
+		parameterType="com.boot.finalpro.teambbs.model.TeamDetailParam">
+		SELECT NVL(COUNT(*), 0) AS CNT
+		FROM TEAM_DETAIL
+		WHERE 1=1
+		<if
+			test="s_category != null and s_category != ''
+		 and s_keyword != null and s_keyword != ''">
+			<if test="s_category == 'team_name'">
+				AND TEAM_NAME LIKE '%'||#{s_keyword}||'%'
+			</if>
+			<if test="s_category == 'leader'">
+				AND LEADER LIKE '%'||#{s_keyword}||'%'
+			</if>
+			<if test="s_category == 'title'">
+				AND TITLE LIKE '%'||#{s_keyword}||'%'
+			</if>
+		</if>
+	</select>
+
+<update parameterType="java.lang.String" id="MemberReportCount">
+	UPDATE MEMBER
+	SET REPORT_COUNT=REPORT_COUNT+1
+	WHERE ID=#{id} 
+</update>
+
+	<!-- 멤버 신고수 삭제 -->
+	<update id="DeleteMemberReportCount" parameterType="java.lang.String">
+		UPDATE MEMBER
+		SET REPORT_COUNT = REPORT_COUNT - 1
+		WHERE ID=#{id}
+	</update>
+	<!-- 게시글 신고수 삭제 -->
+	<update id="DeleteBbsReportCount" parameterType="java.lang.Integer">
+		UPDATE TEAM_BBS
+		SET REPORT_COUNT = REPORT_COUNT - 1
+		WHERE SEQ=#{seq}
+	</update>
+	<!-- 댓글 신고수 삭제 -->
+	<update id="DeleteBbsCommentReportCount" parameterType="java.lang.Integer">
+		UPDATE TEAM_BBS_COMMENT
+		SET REPORT_COUNT = REPORT_COUNT - 1
+		WHERE SEQ=#{seq}
+	</update>
+	<!-- 신고글 삭제 하기 -->
+	<delete id="DeleteBbsReport" parameterType="java.lang.Integer">
+		DELETE 
+		FROM REPORT_BBS
+		WHERE SEQ=#{seq}
+	</delete>
+	<delete id="DeleteBbsCommentReport" parameterType="java.lang.Integer">
+		DELETE FROM REPORT_COMMENT
+		WHERE SEQ=#{seq}
+	</delete>
+	
+	<delete id="DeleteTeamReport" parameterType="java.lang.Integer">
+		DELETE
+		FROM REPORT_TEAM
+		WHERE SEQ=#{seq}
+	</delete>
+	<update id="DeleteTeamReportCount" parameterType="java.lang.String">
+		UPDATE TEAM_DETAIL
+		SET REPORT_COUNT = REPORT_COUNT -1
+		WHERE TEAM_NAME=#{team_name}
+	</update>
+	
+	<select id="getCommentReportCount" parameterType="java.lang.Integer"
+	resultType="java.lang.Integer">
+      SELECT NVL(SUM(REPORT_COUNT), 0) AS COMMENT_REPORT_COUNT
+      FROM TEAM_BBS_COMMENT
+      GROUP BY PARENT
+      HAVING PARENT=#{seq}
+	</select>
+</mapper>

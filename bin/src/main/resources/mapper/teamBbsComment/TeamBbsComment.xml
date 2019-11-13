@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="teambbscomment">
+<!-- 댓글 리스트 불러오기 -->
+<select id="getBbsTeamComment" parameterType="java.lang.Integer"
+		resultType="com.boot.finalpro.teambbscomment.model.TeamBBSCommentDTO">
+	SELECT SEQ, ID, REPLY_ID, CONTENT, REF, STEP, DEPTS, PARENT, DEL, LIKE_COUNT, REPORT_COUNT, WDATE
+	FROM TEAM_BBS_COMMENT
+	WHERE PARENT=#{seq}
+	ORDER BY REF ASC, STEP ASC
+</select>
+<!-- 댓글 작성 -->
+<insert id="TeamBbsCommentInsert" parameterType="com.boot.finalpro.teambbscomment.model.TeamBBSCommentDTO">
+	INSERT INTO TEAM_BBS_COMMENT(SEQ, ID, CONTENT, REF, STEP, DEPTS, PARENT, DEL, LIKE_COUNT, REPORT_COUNT, WDATE)
+	VALUES(TEAM_BBS_COMMENT_SEQ.NEXTVAL, #{id}, #{content}, 
+		   (SELECT NVL(MAX(REF), 0) +1 FROM TEAM_BBS_COMMENT),
+		   0, 0, #{parent}, 0, 0, 0, SYSDATE)
+</insert>
+<!-- 댓글 수정 -->
+<update id="TeamBbsCommentUpdate" parameterType="com.boot.finalpro.teambbscomment.model.TeamBBSCommentDTO">
+	UPDATE TEAM_BBS_COMMENT
+	SET CONTENT=#{content}
+	WHERE SEQ=#{seq}
+</update>
+<!-- 댓글 삭제 -->
+<update id="TeamBbsCommentDelete" parameterType="java.lang.Integer">
+	UPDATE TEAM_BBS_COMMENT
+	SET DEL=1
+	WHERE SEQ=#{seq}
+</update>
+<!-- 대댓글 원본 리스트 업데이트 -->
+<update id="TeamBbsCommentReplyUpdate" parameterType="com.boot.finalpro.teambbscomment.model.TeamBBSCommentDTO">
+	UPDATE TEAM_BBS_COMMENT
+	SET STEP = STEP + 1
+	WHERE REF=(SELECT REF FROM TEAM_BBS_COMMENT WHERE SEQ=#{seq})
+	AND STEP <![CDATA[>]]> (SELECT STEP FROM TEAM_BBS_COMMENT WHERE SEQ=#{seq})
+</update>
+<!-- 대댓글 작성 -->
+<insert id="TeamBbsCommentReplyInsert" parameterType="com.boot.finalpro.teambbscomment.model.TeamBBSCommentDTO">
+	INSERT INTO TEAM_BBS_COMMENT(SEQ, ID, REPLY_ID, CONTENT, REF, STEP, DEPTS, PARENT, DEL, LIKE_COUNT, REPORT_COUNT, WDATE)
+	VALUES(TEAM_BBS_COMMENT_SEQ.NEXTVAL, #{id}, #{reply_id}, #{content},
+	(SELECT REF FROM TEAM_BBS_COMMENT WHERE SEQ=#{seq}),
+	(SELECT STEP FROM TEAM_BBS_COMMENT WHERE SEQ=#{seq})+1,
+	(SELECT DEPTS FROM TEAM_BBS_COMMENT WHERE SEQ=#{seq})+1,
+	#{parent}, 0, 0, 0, SYSDATE)
+</insert>
+
+<!-- 댓글 신고수 추가 -->
+<update id="CommentReportCount" parameterType="java.lang.Integer">
+	UPDATE TEAM_BBS_COMMENT
+	SET REPORT_COUNT=REPORT_COUNT+1
+	WHERE SEQ=#{seq}
+</update>
+
+<!-- 댓글 중복 테이블 추가 -->
+<insert id="CommentReportInsert" parameterType="com.boot.finalpro.teambbs.model.OverlapDTO">
+	INSERT INTO OVERLAP(SEQ, ID, BBS_COMMENT_REPORT)
+	VALUES(OVERLAP_SEQ.NEXTVAL, #{id}, #{seq}) 
+</insert>
+
+<!-- 댓글 신고 중복 체크 -->
+<select id="CommentReportPickId" parameterType="com.boot.finalpro.teambbs.model.OverlapDTO"
+		 resultType="com.boot.finalpro.teambbs.model.OverlapDTO">
+	SELECT SEQ, ID, BBS_COMMENT_REPORT
+	FROM OVERLAP
+	WHERE BBS_COMMENT_REPORT=#{seq} AND ID=#{id}
+</select>
+
+<!-- 게시판 신고 내용 관리자 보내기 -->
+<insert id="CommentReportSend" parameterType="com.boot.finalpro.teambbscomment.model.ReportCommentDTO">
+	INSERT INTO REPORT_COMMENT(SEQ, ID, CONTENT, PARENT)
+	VALUES(REPORT_COMMENT_SEQ.NEXTVAL, #{id}, #{content}, #{seq})
+</insert>
+<!-- 댓글 신고 갯수 불러오기 -->
+<select id="CommentReportGetCount" parameterType="java.lang.Integer"
+		resultType="java.lang.Integer">
+	SELECT REPORT_COUNT
+	FROM TEAM_BBS_COMMENT
+	WHERE SEQ=#{seq}
+</select>
+<select id="getCommentReportList" parameterType="java.lang.Integer"
+		resultType="com.boot.finalpro.teambbscomment.model.ReportCommentDTO">
+	SELECT SEQ, ID, CONTENT, PARENT
+	FROM REPORT_COMMENT
+	WHERE PARENT=#{seq}
+</select>
+<!-- 댓글 작성자 가져오기 -->
+<select id="CommentWriteGetId" parameterType="java.lang.Integer" resultType="java.lang.String">
+	SELECT ID
+	FROM TEAM_BBS_COMMENT
+	WHERE SEQ=#{seq}
+</select>
+</mapper>
